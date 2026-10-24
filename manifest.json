@@ -1,0 +1,30 @@
+{
+  "id": "./",
+  "name": "Bonk Bikers",
+  "short_name": "Bonk Bikers",
+  "description": "A silly, kid-friendly motorbike racer.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#7ad7ff",
+  "theme_color": "#ff8a1f",
+  "icons": [
+    {
+      "src": "assets/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "assets/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "assets/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

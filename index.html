@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Bonk Bikers">
+  <meta name="theme-color" content="#ff8a1f">
+  <title>Bonk Bikers</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="assets/icons/icon-180.png">
+  <link rel="icon" href="assets/icons/icon-192.png">
+  <link rel="stylesheet" href="css/style.css">
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js"
+    }
+  }
+  </script>
+  <script type="module" src="js/main.js"></script>
+</head>
+<body>
+  <canvas id="game"></canvas>
+
+  <!-- In-race HUD -->
+  <div id="hud" class="hidden">
+    <div class="hud-top">
+      <div id="hud-place" class="pill place">🥇 1st</div>
+      <div id="hud-time" class="pill">⏱ 0:00</div>
+      <div id="hud-coins" class="pill">🪙 0</div>
+      <div id="hud-stars" class="pill">⭐ 0</div>
+      <div id="hud-bonks" class="pill">💥 0</div>
+      <div class="spacer"></div>
+      <button class="pill round" data-act="horn" aria-label="Horn">📯</button>
+      <button class="pill round" data-act="pause" aria-label="Pause">⏸</button>
+    </div>
+    <div id="hud-progress"><div class="bar"><span class="flag">🏁</span></div></div>
+    <div id="countdown"></div>
+    <div id="toast"></div>
+  </div>
+
+  <!-- Touch controls -->
+  <div id="controls" class="hidden">
+    <div class="cluster left">
+      <button class="ctl bonk" data-act="bonkL" aria-label="Bonk left">💥</button>
+      <div id="steer" class="steer" aria-label="Steer">
+        <div class="ctl arrow" data-dir="left">◀</div>
+        <div class="ctl arrow" data-dir="right">▶</div>
+      </div>
+    </div>
+    <div class="cluster right">
+      <button class="ctl bonk" data-act="bonkR" aria-label="Bonk right">💥</button>
+      <div class="row">
+        <button class="ctl boost" data-act="boost" aria-label="Boost">⚡<span id="boost-pips" class="pips"><i></i><i></i><i></i></span></button>
+        <button class="ctl go" data-act="go" aria-label="Go">GO</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Screens -->
+  <section id="screen-title" class="screen title">
+    <h1 id="logo" class="logo"><span>Bonk</span><span>Bikers</span></h1>
+    <div class="hero-bike">🏍️💨</div>
+    <button id="btn-start" class="big-btn pulse">▶ Play</button>
+  </section>
+
+  <section id="screen-menu" class="screen hidden">
+    <header class="bar">
+      <div class="pill">🪙 <span class="coin-count">0</span></div>
+      <div class="spacer"></div>
+      <button id="gate-settings" class="gate pill"><span class="fill"></span><span class="txt">⚙️ Grown-ups: hold</span></button>
+    </header>
+    <div class="tiles">
+      <button class="tile sunday" data-mode="sunday"><span class="ico">🌼</span><span class="lbl">Sunday Ride</span></button>
+      <button class="tile race" data-mode="race"><span class="ico">🏁</span><span class="lbl">Race Day</span></button>
+      <button class="tile battle" data-mode="battle"><span class="ico">💥</span><span class="lbl">Bonk Battle</span></button>
+      <button id="btn-garage" class="tile garage"><span class="ico">🏍️</span><span class="lbl">Garage</span></button>
+      <button id="btn-stickers" class="tile stickers"><span class="ico">📒</span><span class="lbl">Stickers</span></button>
+    </div>
+  </section>
+
+  <section id="screen-worlds" class="screen hidden">
+    <header class="bar">
+      <button class="pill round" data-back aria-label="Back">⬅</button>
+      <h2 id="worlds-title"></h2>
+    </header>
+    <div id="world-cards" class="cards"></div>
+  </section>
+
+  <section id="screen-garage" class="screen garage hidden">
+    <header class="bar">
+      <button class="pill round" data-back aria-label="Back">⬅</button>
+      <div class="spacer"></div>
+      <div class="pill">🪙 <span class="coin-count">0</span></div>
+    </header>
+    <div class="garage-body">
+      <div class="garage-view"></div>
+      <div class="garage-panel">
+        <div id="garage-tabs" class="tabs"></div>
+        <div id="garage-items" class="items scroll"></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="screen-stickers" class="screen hidden">
+    <header class="bar">
+      <button class="pill round" data-back aria-label="Back">⬅</button>
+      <h2>📒 <span id="sticker-count"></span></h2>
+    </header>
+    <div id="sticker-grid" class="sticker-grid scroll"></div>
+  </section>
+
+  <section id="screen-settings" class="screen hidden">
+    <header class="bar">
+      <button class="pill round" data-back aria-label="Back">⬅</button>
+      <h2>⚙️ Grown-up settings</h2>
+    </header>
+    <div id="settings-list" class="settings scroll"></div>
+  </section>
+
+  <section id="screen-pause" class="screen overlay hidden">
+    <div class="panel">
+      <div class="medal">⏸</div>
+      <div class="row">
+        <button id="btn-resume" class="big-btn green" aria-label="Keep riding">▶</button>
+        <button id="btn-restart" class="big-btn blue" aria-label="Start again">🔄</button>
+        <button id="btn-home" class="big-btn pink" aria-label="Home">🏠</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="screen-results" class="screen overlay hidden">
+    <div class="panel results">
+      <div id="res-medal" class="medal"></div>
+      <div id="res-title" class="res-title"></div>
+      <div id="res-stats" class="stats"></div>
+      <div id="res-rewards" class="rewards"></div>
+      <div class="row">
+        <button id="res-again" class="big-btn blue">🔄</button>
+        <button id="res-next" class="big-btn green">▶</button>
+        <button id="res-home" class="big-btn pink" aria-label="Home">🏠</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="screen-nap" class="screen nap hidden">
+    <div class="nap-art">🏍️😴🌙</div>
+    <h2>The bikes need a nap!</h2>
+    <button id="gate-nap" class="gate pill"><span class="fill"></span><span class="txt">Grown-ups: hold to play more</span></button>
+  </section>
+
+  <div id="rotate" class="rotate"><div class="spin">📱</div><p>Turn your iPad sideways!</p></div>
+  <div id="fps" class="hidden"></div>
+</body>
+</html>
