@@ -145,6 +145,62 @@ export class Showroom {
     this.turntable.rotation.y = this.t * 0.6;
   }
 
+  // A small transparent picture of a bike for the garage list (cached per look).
+  thumbnail(renderer, look) {
+    const key = JSON.stringify(look);
+    if (this.thumbs?.has(key)) return this.thumbs.get(key);
+    const W = 240, H = 160;
+    if (!this.rt) {
+      this.thumbs = new Map();
+      this.rt = new THREE.WebGLRenderTarget(W, H, { samples: 4 });
+      this.thumbScene = new THREE.Scene();
+      this.thumbScene.add(new THREE.HemisphereLight(0xffffff, 0x99bb88, 2.0));
+      const sun = new THREE.DirectionalLight(0xffffff, 1.8);
+      sun.position.set(4, 6, -3);
+      this.thumbScene.add(sun);
+      this.thumbCam = new THREE.PerspectiveCamera(34, W / H, 0.1, 50);
+      this.thumbCam.position.set(4.3, 1.8, -2.5);
+      this.thumbCam.lookAt(0, 0.9, -0.05);
+      // Linear light to sRGB, for reading pixels back from the render target.
+      this.lut = new Uint8Array(256);
+      for (let i = 0; i < 256; i++) {
+        const v = i / 255;
+        this.lut[i] = Math.round(255 * (v <= 0.0031308 ? v * 12.92 : 1.055 * Math.pow(v, 1 / 2.4) - 0.055));
+      }
+    }
+    const bike = buildBike(look);
+    bike.shadow.visible = false;
+    bike.noodle.visible = false;
+    this.thumbScene.add(bike.root);
+    const prevColor = renderer.getClearColor(new THREE.Color()), prevAlpha = renderer.getClearAlpha();
+    renderer.setClearColor(0x000000, 0);
+    renderer.setRenderTarget(this.rt);
+    renderer.clear();
+    renderer.render(this.thumbScene, this.thumbCam);
+    const px = new Uint8Array(W * H * 4);
+    renderer.readRenderTargetPixels(this.rt, 0, 0, W, H, px);
+    renderer.setRenderTarget(null);
+    renderer.setClearColor(prevColor, prevAlpha);
+    bike.dispose();
+    bike.root.removeFromParent();
+    const c = document.createElement('canvas');
+    c.width = W; c.height = H;
+    const g = c.getContext('2d');
+    const img = g.createImageData(W, H);
+    for (let y = 0; y < H; y++) {
+      for (let x = 0; x < W; x++) {
+        const s = ((H - 1 - y) * W + x) * 4, d = (y * W + x) * 4, a = px[s + 3];
+        if (!a) continue;
+        for (let k = 0; k < 3; k++) img.data[d + k] = this.lut[Math.min(255, Math.round((px[s + k] * 255) / a))];
+        img.data[d + 3] = a;
+      }
+    }
+    g.putImageData(img, 0, 0);
+    const url = c.toDataURL();
+    this.thumbs.set(key, url);
+    return url;
+  }
+
   render(renderer) {
     const w = renderer.domElement.clientWidth || window.innerWidth, h = renderer.domElement.clientHeight || window.innerHeight;
     this.camera.aspect = w / h;

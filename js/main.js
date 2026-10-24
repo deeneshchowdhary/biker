@@ -166,6 +166,7 @@ const app = {
 
   openGarage() {
     this.state = 'garage';
+    menus.preview = null;
     showroom.setLook(lookFromSave(save.data));
     menus.renderGarage();
     menus.show('garage');
@@ -173,6 +174,14 @@ const app = {
 
   lookChanged() {
     if (this.state === 'garage') showroom.setLook(lookFromSave(save.data));
+  },
+
+  previewLook(kind, id) {
+    showroom.setLook(lookFromSave(save.data, { [kind]: id }));
+  },
+
+  bikeThumb(id) {
+    return showroom.thumbnail(stage.renderer, lookFromSave(save.data, { bike: id }));
   },
 };
 

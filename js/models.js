@@ -101,6 +101,115 @@ const BIKES = {
       return parts;
     },
   },
+  // Angular sport bike with gold forks and a two-tone fairing.
+  superbike: {
+    wheelR: 0.36, wf: -0.82, wb: 0.76, seatY: 0.98, seatZ: 0.3, barY: 0.96, barZ: -0.5, tuck: true,
+    body: (C) => {
+      const parts = [
+        P(box(0.5, 0.4, 1.0), C, { y: 0.66, z: -0.3 }),
+        P(box(0.52, 0.18, 0.62), WHITE, { y: 0.52, z: -0.22 }),
+        P(box(0.4, 0.12, 0.7), DARK, { y: 0.38, z: -0.25 }),
+        P(box(0.44, 0.3, 0.36), C, { y: 0.9, z: -0.7, rx: 0.55 }),
+        P(box(0.3, 0.08, 0.18), DARK, { y: 0.78, z: -0.88 }),
+        P(box(0.36, 0.3, 0.04), 0x557799, { y: 1.1, z: -0.62, rx: 0.8 }),
+        P(box(0.42, 0.22, 0.45), C, { y: 0.93, z: -0.2 }),
+        P(box(0.34, 0.1, 0.4), DARK, { y: 0.96, z: 0.25 }),
+        P(box(0.3, 0.18, 0.6), C, { y: 1.02, z: 0.62, rx: -0.3 }),
+        P(box(0.31, 0.05, 0.61), WHITE, { y: 1.09, z: 0.62, rx: -0.3 }),
+        P(box(0.2, 0.06, 0.06), 0xff3030, { y: 1.05, z: 0.92 }),
+        seg([0, 0.36, -0.82], [0, 0.95, -0.55], 0.1, 0xd4a017, true),
+        seg([0, 0.45, 0.1], [0, 0.36, 0.76], 0.1, DARK),
+        P(box(0.62, 0.05, 0.05), DARK, { y: 0.96, z: -0.5 }),
+        P(cyl(0.09, 0.1, 0.4, 8), METAL, { x: 0.2, y: 0.45, z: 0.45, rx: HALF_PI - 0.1 }),
+      ];
+      for (const s of [-1, 1]) {
+        parts.push(
+          P(box(0.13, 0.05, 0.04), LIGHT, { x: s * 0.11, y: 0.9, z: -0.87, rz: s * 0.3 }),
+          P(box(0.02, 0.1, 0.22), DARK, { x: s * 0.26, y: 0.72, z: -0.48 }),
+          P(box(0.02, 0.1, 0.22), DARK, { x: s * 0.26, y: 0.72, z: -0.2 }),
+          P(cyl(0.13, 0.13, 0.02, 12), WHITE, { x: s * 0.26, y: 0.6, z: 0.05, rz: HALF_PI }),
+        );
+      }
+      return parts;
+    },
+  },
+  // Long, rounded "hyper" bike with a bulbous aero fairing and twin exhausts.
+  hyper: {
+    wheelR: 0.37, wf: -0.92, wb: 0.82, seatY: 0.96, seatZ: 0.38, barY: 0.98, barZ: -0.48, tuck: true,
+    body: (C) => {
+      const parts = [
+        P(sph(0.42, 12, 8), C, { y: 0.7, z: -0.32, sx: 0.62, sy: 0.82, sz: 1.55 }),
+        P(sph(0.3, 12, 8), C, { y: 0.88, z: -0.75, sx: 0.8, sy: 0.82, sz: 1.15 }),
+        P(box(0.14, 0.08, 0.04), LIGHT, { y: 0.97, z: -1.06, rx: 0.4 }),
+        P(box(0.12, 0.07, 0.04), LIGHT, { y: 0.86, z: -1.08 }),
+        P(box(0.36, 0.26, 0.04), 0x557799, { y: 1.1, z: -0.74, rx: 0.9 }),
+        P(sph(0.28, 10, 8), C, { y: 0.95, z: -0.12, sx: 0.75, sz: 1.2 }),
+        P(box(0.36, 0.1, 0.42), DARK, { y: 0.95, z: 0.32 }),
+        P(sph(0.24, 10, 8), C, { y: 1.04, z: 0.68, sx: 0.72, sz: 1.5 }),
+        P(box(0.4, 0.12, 0.8), DARK, { y: 0.36, z: -0.3 }),
+        seg([0, 0.37, -0.92], [0, 0.98, -0.62], 0.1, METAL, true),
+        seg([0, 0.45, 0.15], [0, 0.37, 0.82], 0.1, DARK),
+        P(box(0.62, 0.05, 0.05), DARK, { y: 0.98, z: -0.48 }),
+      ];
+      for (const s of [-1, 1]) {
+        parts.push(
+          P(box(0.03, 0.08, 1.05), WHITE, { x: s * 0.255, y: 0.74, z: -0.32 }),
+          P(cyl(0.07, 0.07, 0.05, 10), DARK, { x: s * 0.2, y: 0.83, z: -0.92, rx: HALF_PI }),
+          P(cyl(0.09, 0.11, 0.75, 10), METAL, { x: s * 0.22, y: 0.45, z: 0.58, rx: HALF_PI - 0.15 }),
+        );
+      }
+      return parts;
+    },
+  },
+  // MotoGP-style racer: winglets, nose number plate and a tall tail.
+  gp: {
+    wheelR: 0.34, wf: -0.8, wb: 0.74, seatY: 0.94, seatZ: 0.32, barY: 0.9, barZ: -0.48, tuck: true,
+    body: (C) => {
+      const parts = [
+        P(box(0.46, 0.42, 1.0), C, { y: 0.62, z: -0.3 }),
+        P(box(0.48, 0.06, 1.02), 0xffd23f, { y: 0.7, z: -0.3 }),
+        P(box(0.48, 0.06, 1.02), WHITE, { y: 0.78, z: -0.3 }),
+        P(box(0.4, 0.12, 0.7), DARK, { y: 0.36, z: -0.25 }),
+        P(box(0.42, 0.3, 0.32), C, { y: 0.85, z: -0.74, rx: 0.6 }),
+        P(cyl(0.13, 0.13, 0.02, 14), WHITE, { y: 0.9, z: -0.88, rx: HALF_PI + 0.6 }),
+        P(box(0.3, 0.2, 0.04), 0x9fe3ff, { y: 1.02, z: -0.6, rx: 0.9 }),
+        P(box(0.4, 0.2, 0.42), C, { y: 0.88, z: -0.2 }),
+        P(box(0.32, 0.08, 0.36), DARK, { y: 0.93, z: 0.25 }),
+        P(box(0.3, 0.34, 0.55), C, { y: 1.02, z: 0.62, rx: -0.15 }),
+        P(box(0.31, 0.06, 0.56), 0xffd23f, { y: 1.18, z: 0.62, rx: -0.15 }),
+        P(cyl(0.08, 0.1, 0.45, 8), 0x55555f, { x: 0.18, y: 0.72, z: 0.82, rx: HALF_PI - 0.4 }),
+        seg([0, 0.34, -0.8], [0, 0.9, -0.55], 0.1, 0xd4a017, true),
+        seg([0, 0.42, 0.1], [0, 0.34, 0.74], 0.1, DARK),
+        P(box(0.56, 0.05, 0.05), DARK, { y: 0.9, z: -0.48 }),
+      ];
+      for (const s of [-1, 1]) {
+        parts.push(
+          P(box(0.22, 0.03, 0.18), DARK, { x: s * 0.33, y: 0.82, z: -0.66, rz: s * 0.15 }),
+          P(box(0.2, 0.03, 0.16), DARK, { x: s * 0.32, y: 0.72, z: -0.64, rz: s * 0.15 }),
+          P(box(0.08, 0.05, 0.04), LIGHT, { x: s * 0.1, y: 0.8, z: -0.88 }),
+        );
+      }
+      return parts;
+    },
+  },
+  // Motocross dirt bike: tall forks, high fenders, rider stands tall.
+  motocross: {
+    wheelR: 0.42, wf: -0.86, wb: 0.78, seatY: 1.14, seatZ: 0.22, barY: 1.4, barZ: -0.55,
+    body: (C) => [
+      P(box(0.24, 0.3, 0.8), DARK, { y: 0.76, z: -0.05 }),
+      P(box(0.44, 0.3, 0.45), C, { y: 1.02, z: -0.25 }),
+      P(box(0.5, 0.24, 0.26), WHITE, { y: 0.9, z: -0.42 }),
+      P(box(0.3, 0.1, 0.9), DARK, { y: 1.14, z: 0.2 }),
+      P(box(0.28, 0.06, 0.7), C, { y: 1.12, z: 0.78, rx: -0.25 }),
+      P(box(0.24, 0.05, 0.62), C, { y: 0.98, z: -0.95, rx: 0.12 }),
+      P(box(0.32, 0.28, 0.04), WHITE, { y: 1.22, z: -0.72, rx: -0.25 }),
+      seg([0.1, 0.42, -0.86], [0.1, 1.32, -0.58], 0.09, 0xd4a017, true),
+      seg([-0.1, 0.42, -0.86], [-0.1, 1.32, -0.58], 0.09, 0xd4a017, true),
+      seg([0, 0.55, 0.1], [0, 0.42, 0.78], 0.1, METAL),
+      P(box(0.82, 0.06, 0.06), DARK, { y: 1.4, z: -0.55 }),
+      P(cyl(0.06, 0.08, 0.6, 8), METAL, { x: 0.22, y: 0.98, z: 0.55, rx: HALF_PI - 0.3 }),
+    ],
+  },
   scooter: {
     wheelR: 0.24, wf: -0.62, wb: 0.6, seatY: 0.8, seatZ: 0.3, barY: 1.15, barZ: -0.6,
     body: (C) => [

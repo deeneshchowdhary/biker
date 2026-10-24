@@ -2,11 +2,15 @@
 
 export const SHOP = {
   bike: [
-    { id: 'classic', icon: '🏁', price: 0, speed: 1.0, accel: 1.0 },
-    { id: 'scooter', icon: '🛵', price: 80, speed: 0.98, accel: 1.15 },
-    { id: 'chopper', icon: '🦅', price: 150, speed: 1.04, accel: 0.92 },
-    { id: 'banana', icon: '🍌', price: 250, speed: 1.03, accel: 1.08 },
-    { id: 'rocket', icon: '🚀', price: 400, speed: 1.07, accel: 1.05, boost: 1.25 },
+    { id: 'classic', name: 'Racer', icon: '🏁', price: 0, speed: 1.0, accel: 1.0 },
+    { id: 'superbike', name: 'Superbike', icon: '⚡', price: 120, speed: 1.04, accel: 1.05 },
+    { id: 'motocross', name: 'Motocross', icon: '🏔️', price: 180, speed: 1.0, accel: 1.15 },
+    { id: 'hyper', name: 'Hyper', icon: '💨', price: 300, speed: 1.1, accel: 0.96 },
+    { id: 'gp', name: 'GP Racer', icon: '🏆', price: 500, speed: 1.08, accel: 1.08 },
+    { id: 'scooter', name: 'Scooter', icon: '🛵', price: 80, speed: 0.98, accel: 1.15 },
+    { id: 'chopper', name: 'Chopper', icon: '🦅', price: 150, speed: 1.04, accel: 0.92 },
+    { id: 'banana', name: 'Banana', icon: '🍌', price: 250, speed: 1.03, accel: 1.08 },
+    { id: 'rocket', name: 'Rocket', icon: '🚀', price: 400, speed: 1.07, accel: 1.05, boost: 1.25 },
   ],
   color: [
     { id: 'red', hex: 0xe8413b, price: 0 },
@@ -45,8 +49,9 @@ export const SHOP = {
 
 export const shopItem = (kind, id) => SHOP[kind].find((i) => i.id === id) || SHOP[kind][0];
 
-export function lookFromSave(data) {
-  const e = data.equip;
+// `preview` swaps in garage items the player is looking at but hasn't bought.
+export function lookFromSave(data, preview = {}) {
+  const e = { ...data.equip, ...preview };
   return {
     bike: e.bike,
     color: shopItem('color', e.color).hex,

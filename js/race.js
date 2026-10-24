@@ -11,7 +11,7 @@ const _a = new THREE.Vector3(), _b = new THREE.Vector3();
 const RIVAL_COLORS = [0x2f7cf6, 0x34c759, 0xff9500, 0x9b59ff, 0xff6fb5, 0x1fc8c8, 0xffc61a, 0xe8413b];
 const RIVAL_HELMETS = [0xffd60a, 0xf5f5f5, 0xff70a6, 0x2ecc71, 0x3a86ff, 0xff9500];
 const NOODLES = [0x3cf07a, 0x4fd6ff, 0xffe14d, 0xb47bff, 0xff8a3c, 0xff5fa2];
-const RIVAL_BIKES = ['classic'];
+const RIVAL_BIKES = ['superbike', 'gp', 'hyper', 'classic', 'motocross', 'superbike'];
 const DIFF = {
   easy: { rival: 27, top: 31.5, aggro: 0.2, bonkGap: 8, avoid: 0.6 },
   normal: { rival: 30, top: 34.5, aggro: 0.4, bonkGap: 5, avoid: 0.8 },

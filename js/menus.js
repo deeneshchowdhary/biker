@@ -78,7 +78,11 @@ export class Menus {
       const locked = mode !== 'sunday' && i >= d.unlocked;
       const card = document.createElement('button');
       card.className = 'card' + (locked ? ' locked' : '');
-      card.style.background = w.card;
+      card.style.setProperty('--sky', hex(w.sky));
+      card.style.setProperty('--ground', hex(w.ground[0]));
+      card.style.setProperty('--road', hex(w.road[0]));
+      card.style.setProperty('--line', hex(w.line));
+      card.style.setProperty('--rumble', hex(w.rumble[1]));
       const got = ['finish', 'podium', 'win', 'hidden'].map((k) => (d.stickers.includes(`${w.id}-${k}`) ? '●' : '○')).join('');
       const best = d.best[w.id] ? PLACE_ICON[d.best[w.id] - 1] : '';
       card.innerHTML = `<span class="ico">${w.icon}</span><span class="lbl">${w.name}</span><span class="sub">${best} <span class="dots">${got}</span></span>${locked ? '<span class="lock">🔒</span>' : ''}`;
@@ -100,34 +104,47 @@ export class Menus {
       const b = document.createElement('button');
       b.className = 'tab' + (id === this.tab ? ' on' : '');
       b.textContent = icon;
-      tap(b, () => { this.tab = id; this.renderGarage(); });
+      tap(b, () => { this.tab = id; this.preview = null; this.app.lookChanged(); this.renderGarage(); });
       tabs.appendChild(b);
     }
     const list = $('garage-items');
     list.innerHTML = '';
+    list.classList.toggle('bikes', this.tab === 'bike');
     for (const item of SHOP[this.tab]) {
       const owned = d.owned[this.tab].includes(item.id);
       const equipped = d.equip[this.tab] === item.id;
+      const previewing = this.preview?.tab === this.tab && this.preview.id === item.id;
       const b = document.createElement('button');
-      b.className = `item${equipped ? ' equipped' : ''}${owned ? ' owned' : ''}${!owned && d.coins < item.price ? ' poor' : ''}`;
-      const face = item.hex !== undefined
-        ? `<span class="swatch" style="background:${hex(item.hex)}">${this.tab === 'helmet' ? '⛑️' : ''}</span>`
-        : `<span class="emoji">${item.icon}</span>`;
-      b.innerHTML = `${face}<span class="price">${owned ? (equipped ? '✅' : '') : `🪙 ${item.price}`}</span>`;
+      b.className = `item${equipped ? ' equipped' : ''}${owned ? ' owned' : ''}${previewing ? ' preview' : ''}${!owned && d.coins < item.price ? ' poor' : ''}`;
+      let face;
+      if (this.tab === 'bike') face = `<img class="thumb" alt="" src="${this.app.bikeThumb(item.id)}"><span class="name">${item.name}</span>`;
+      else if (item.hex !== undefined) face = `<span class="swatch" style="background:${hex(item.hex)}">${this.tab === 'helmet' ? '⛑️' : ''}</span>`;
+      else face = `<span class="emoji">${item.icon}</span>`;
+      const price = owned ? (equipped ? '✅' : '') : previewing ? `<span class="buy">🪙 ${item.price} ✔</span>` : `🪙 ${item.price}`;
+      b.innerHTML = `${face}<span class="price">${price}</span>`;
       tap(b, () => this.choose(item, owned, b));
       list.appendChild(b);
     }
     this.refreshCoins();
   }
 
+  // First tap on something you don't own shows it on the turntable; the second tap buys it.
   choose(item, owned, el) {
-    const d = save.data;
+    const d = save.data, tab = this.tab;
     if (!owned) {
+      if (!(this.preview?.tab === tab && this.preview.id === item.id)) {
+        this.preview = { tab, id: item.id };
+        this.app.previewLook(tab, item.id);
+        if (tab === 'horn') audio.horn(item.id);
+        this.renderGarage();
+        return;
+      }
       if (d.coins < item.price) { audio.denied(); el.classList.remove('shake'); void el.offsetWidth; el.classList.add('shake'); return; }
       d.coins -= item.price;
-      d.owned[this.tab].push(item.id);
+      d.owned[tab].push(item.id);
       audio.sticker();
     }
+    this.preview = null;
     d.equip[this.tab] = item.id;
     if (this.tab === 'horn') audio.horn(item.id);
     save.write();
