@@ -16,6 +16,8 @@ export class Input {
     this.tilt = 0;
     this.tiltOn = false;
     this.tiltFlip = false;
+    this.touchSteer = 0;
+    this.wheelAngle = 0;
     document.querySelectorAll('[data-act]').forEach((el) => this.bindButton(el));
     const steer = document.getElementById('steer');
     if (steer) this.bindSteer(steer);
@@ -29,7 +31,7 @@ export class Input {
       const act = KEYS[e.code];
       if (act) { this.keys[act] = false; this.refresh(act); }
     });
-    window.addEventListener('blur', () => { this.keys = {}; this.touch = {}; Object.keys(this.held).forEach((a) => this.refresh(a)); });
+    window.addEventListener('blur', () => { this.keys = {}; this.touch = {}; this.touchSteer = 0; Object.keys(this.held).forEach((a) => this.refresh(a)); });
   }
 
   refresh(act) {
@@ -55,17 +57,16 @@ export class Input {
     el.addEventListener('contextmenu', (e) => e.preventDefault());
   }
 
-  // One zone for both arrows, so a thumb can slide between left and right.
+  // Round steering wheel: touch left or right of centre to turn; further out turns harder.
   bindSteer(zone) {
     const fingers = new Map();
-    const [leftEl, rightEl] = zone.querySelectorAll('[data-dir]');
     const update = () => {
-      const r = zone.getBoundingClientRect(), mid = r.left + r.width / 2;
-      let l = false, rt = false;
-      for (const x of fingers.values()) { if (x < mid) l = true; else rt = true; }
-      this.touch.left = l; this.touch.right = rt;
-      leftEl.classList.toggle('down', l); rightEl.classList.toggle('down', rt);
-      this.refresh('left'); this.refresh('right');
+      const r = zone.getBoundingClientRect();
+      const cx = r.left + r.width / 2, reach = zone.offsetWidth * 0.32;
+      let sum = 0;
+      for (const x of fingers.values()) sum += clamp((x - cx) / reach, -1, 1);
+      this.touchSteer = fingers.size ? clamp(sum / fingers.size, -1, 1) : 0;
+      zone.classList.toggle('down', fingers.size > 0);
     };
     zone.addEventListener('pointerdown', (e) => {
       e.preventDefault();
@@ -78,6 +79,7 @@ export class Input {
     zone.addEventListener('pointerup', up);
     zone.addEventListener('pointercancel', up);
     zone.addEventListener('lostpointercapture', up);
+    this.wheelArt = zone.querySelector('.wheel-art');
   }
 
   // iOS needs a tap before it shares tilt data; call this from a button handler.
@@ -104,8 +106,16 @@ export class Input {
   }
 
   get steer() {
-    const keys = (this.held.right ? 1 : 0) - (this.held.left ? 1 : 0);
-    return this.tiltOn && this.useTilt ? clamp(this.tilt + keys, -1, 1) : keys;
+    const manual = (this.held.right ? 1 : 0) - (this.held.left ? 1 : 0) + this.touchSteer;
+    return clamp(manual + (this.tiltOn && this.useTilt ? this.tilt : 0), -1, 1);
+  }
+
+  // Turn the wheel picture to match however the player is steering.
+  animateWheel(dt) {
+    if (!this.wheelArt) return;
+    const target = this.steer * 100;
+    this.wheelAngle += (target - this.wheelAngle) * Math.min(1, dt * 14);
+    this.wheelArt.style.transform = `rotate(${this.wheelAngle.toFixed(1)}deg)`;
   }
 
   pressed(act) { return this.edges.has(act); }

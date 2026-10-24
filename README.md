@@ -12,7 +12,7 @@ python3 -m http.server 8000
 
 Then open http://localhost:8000.
 
-**Keyboard:** ← → (or A/D) steer · ↑ (or W) go · Space boost · Z / X bonk · H horn · Esc pause
+**Keyboard:** ← → (or A/D) steer (on iPad: the steering wheel) · ↑ (or W) go · Space boost · Z / X bonk · H horn · Esc pause
 
 ## Modes
 

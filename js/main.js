@@ -191,6 +191,7 @@ function frame(t) {
   lastT = t;
   if ((app.state === 'race' || app.state === 'results') && app.race) {
     app.race.update(dt, input);
+    input.animateWheel(dt);
     stage.render();
     if (app.state === 'race') { app.playTime += dt; stage.adapt(dt); }
   } else if (app.state === 'garage') {

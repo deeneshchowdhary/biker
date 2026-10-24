@@ -46,9 +46,17 @@
   <div id="controls" class="hidden">
     <div class="cluster left">
       <button class="ctl bonk" data-act="bonkL" aria-label="Bonk left">💥</button>
-      <div id="steer" class="steer" aria-label="Steer">
-        <div class="ctl arrow" data-dir="left">◀</div>
-        <div class="ctl arrow" data-dir="right">▶</div>
+      <div id="steer" class="wheel" aria-label="Steering wheel">
+        <svg class="wheel-art" viewBox="0 0 100 100" aria-hidden="true">
+          <circle cx="50" cy="50" r="47" fill="#2b2140"/>
+          <circle cx="50" cy="50" r="41" fill="#3a86ff"/>
+          <circle cx="50" cy="50" r="33" fill="rgba(255,255,255,0.55)"/>
+          <path d="M50 50 L17 46 L17 56 Z M50 50 L83 46 L83 56 Z M50 50 L45 83 L55 83 Z" fill="#2b2140"/>
+          <circle cx="50" cy="50" r="14" fill="#ffd23f" stroke="#2b2140" stroke-width="3"/>
+          <rect x="46" y="3" width="8" height="12" rx="3" fill="#ff5fa2"/>
+          <path d="M8 38 A43 43 0 0 1 22 16" stroke="#7fb3ff" stroke-width="5" fill="none" stroke-linecap="round"/>
+          <path d="M92 38 A43 43 0 0 0 78 16" stroke="#7fb3ff" stroke-width="5" fill="none" stroke-linecap="round"/>
+        </svg>
       </div>
     </div>
     <div class="cluster right">

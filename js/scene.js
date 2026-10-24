@@ -71,7 +71,12 @@ export class Stage {
     this.confetti = new Confetti(this.scene);
     this.frames = 0; this.frameTime = 0; this.slowWindows = 0;
     this.resize();
-    window.addEventListener('resize', () => this.resize());
+    // iPad Home Screen apps can report a stale window size, so watch the canvas itself.
+    const later = () => { this.resize(); setTimeout(() => this.resize(), 300); };
+    window.addEventListener('resize', later);
+    window.addEventListener('orientationchange', later);
+    window.visualViewport?.addEventListener('resize', later);
+    if (window.ResizeObserver) new ResizeObserver(() => this.resize()).observe(canvas);
   }
 
   setWorld(w) {
@@ -85,8 +90,11 @@ export class Stage {
   }
 
   resize() {
-    const w = window.innerWidth, h = window.innerHeight;
-    this.renderer.setSize(w, h);
+    const c = this.renderer.domElement;
+    const w = c.clientWidth || window.innerWidth, h = c.clientHeight || window.innerHeight;
+    if (w === this.w && h === this.h) return;
+    this.w = w; this.h = h;
+    this.renderer.setSize(w, h, false);
     this.camera.aspect = w / h;
     this.camera.updateProjectionMatrix();
   }
@@ -138,7 +146,7 @@ export class Showroom {
   }
 
   render(renderer) {
-    const w = window.innerWidth, h = window.innerHeight;
+    const w = renderer.domElement.clientWidth || window.innerWidth, h = renderer.domElement.clientHeight || window.innerHeight;
     this.camera.aspect = w / h;
     // Shift the view so the bike sits in the left part of the screen, beside the shop panel.
     this.camera.setViewOffset(w, h, w * 0.22, 0, w, h);
