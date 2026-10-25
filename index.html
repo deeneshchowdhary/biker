@@ -45,7 +45,11 @@
   <!-- Touch controls -->
   <div id="controls" class="hidden">
     <div class="cluster left">
-      <button class="ctl bonk" data-act="bonkL" aria-label="Bonk left">💥</button>
+      <!-- Shown when the player presses GO: right thumb stays on GO. -->
+      <div class="bonk-pad for-go">
+        <button class="ctl bonk-half" data-act="bonkL" aria-label="Bonk left"><span class="arr">◀</span>💥</button>
+        <button class="ctl bonk-half" data-act="bonkR" aria-label="Bonk right">💥<span class="arr">▶</span></button>
+      </div>
       <div id="steer" class="wheel" aria-label="Steering wheel">
         <svg class="wheel-art" viewBox="0 0 100 100" aria-hidden="true">
           <circle cx="50" cy="50" r="47" fill="#2b2140"/>
@@ -60,9 +64,13 @@
       </div>
     </div>
     <div class="cluster right">
-      <button class="ctl bonk" data-act="bonkR" aria-label="Bonk right">💥</button>
       <div class="row">
         <button class="ctl boost" data-act="boost" aria-label="Boost">⚡<span id="boost-pips" class="pips"><i></i><i></i><i></i></span></button>
+        <!-- Shown in auto-go: the right thumb is free, so all bonking lives here. -->
+        <div class="bonk-pad for-auto">
+          <button class="ctl bonk-half" data-act="bonkL" aria-label="Bonk left"><span class="arr">◀</span>💥</button>
+          <button class="ctl bonk-half" data-act="bonkR" aria-label="Bonk right">💥<span class="arr">▶</span></button>
+        </div>
         <button class="ctl go" data-act="go" aria-label="Go">GO</button>
       </div>
     </div>

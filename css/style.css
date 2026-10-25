@@ -89,14 +89,19 @@ button { font-family: inherit; color: inherit; border: none; background: none; c
 .boost.down { background: #ffe57a; }
 .boost.ready { animation: glow 0.7s ease-in-out infinite alternate; }
 @keyframes glow { from { box-shadow: 0 6px 0 rgba(0, 0, 0, 0.2), 0 0 0 0 rgba(255, 210, 63, 0.9); } to { box-shadow: 0 6px 0 rgba(0, 0, 0, 0.2), 0 0 0 10px rgba(255, 210, 63, 0); } }
-.bonk { background: var(--pink); width: 92px; height: 92px; border-radius: 50%; }
-.bonk.down { background: #ff85b9; }
+.bonk-pad { display: flex; gap: 6px; pointer-events: auto; }
+.bonk-half { background: var(--pink); width: 100px; height: 88px; font-size: 36px; display: flex; align-items: center; justify-content: center; gap: 2px; }
+.bonk-half:first-child { border-radius: 44px 14px 14px 44px; }
+.bonk-half:last-child { border-radius: 14px 44px 44px 14px; }
+.bonk-half .arr { font-size: 20px; color: #fff; }
+.bonk-half.down { background: #ff85b9; }
 .pips { position: absolute; bottom: 9px; left: 50%; transform: translateX(-50%); display: flex; gap: 4px; }
 .pips i { width: 16px; height: 8px; border-radius: 4px; background: rgba(0, 0, 0, 0.2); }
 .pips i.on { background: #ff7a00; }
 
 body.tilt .wheel { visibility: hidden; }
-body.no-bonk .bonk { visibility: hidden; }
+body.no-bonk .bonk-pad { display: none; }
+body:not(.auto-go) .bonk-pad.for-auto, body.auto-go .bonk-pad.for-go { display: none; }
 body.auto-go .go { display: none; }
 
 /* ---------------- Screens ---------------- */
@@ -334,6 +339,6 @@ input[type="range"] { width: 240px; accent-color: var(--blue); touch-action: pan
   .ctl { width: 86px; height: 86px; }
   .wheel { width: 190px; height: 190px; }
   .go { width: 110px; height: 110px; }
-  .bonk { width: 82px; height: 82px; }
+  .bonk-half { width: 92px; height: 80px; }
   .cluster { gap: 10px; }
 }

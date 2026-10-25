@@ -1,6 +1,6 @@
 // Offline support: cache the game the first time it loads.
 // Bump CACHE (bonk-v2, bonk-v3, ...) on every release so iPads pick up the new version.
-const CACHE = 'bonk-v3';
+const CACHE = 'bonk-v4';
 const FILES = [
   './',
   'index.html',
