@@ -69,6 +69,8 @@ const WORLD_STICKERS = {
   dino: ['🦕', '🦖', '🌋', '🥚'],
   snow: ['⛄', '🐧', '🏔️', '❄️'],
   neon: ['🌃', '🎡', '🚦', '🎆'],
+  river: ['🏞️', '🛶', '🐟', '🦆'],
+  circuit: ['🌅', '🏟️', '🔧', '🕛'],
 };
 
 export const STICKERS = [];

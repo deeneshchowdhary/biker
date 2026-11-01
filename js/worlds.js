@@ -88,6 +88,47 @@ export const WORLDS = [
     puddle: { color: 0x9a4dff, effect: 'slip' },
     music: { bpm: 136, root: 57, scale: 'minor', lead: 'square' },
   },
+  {
+    id: 'river', name: 'River Hills', icon: '🏞️', card: '#3aa0e0',
+    sky: 0xa9dcff, fogNear: 70, fogFar: 340,
+    ground: [0x6cc25a, 0x5fb34e], road: [0x6d6d76, 0x67676f], rumble: [0xffffff, 0x2f7cf6], line: 0xffffff,
+    bank: -10, curve: 0.011, hills: 18, rampChance: 0.1,
+    river: { side: -1, from: 15, to: 31, color: [0x3aa0e0, 0x3596d6], sand: 0xe6d29a },
+    props: [
+      { m: 'tree', every: 14, off: [11, 50], scale: [0.8, 1.4] },
+      { m: 'pine', every: 20, off: [11, 50], scale: [0.8, 1.5] },
+      { m: 'reeds', every: 14, off: [9.6, 13], scale: [0.8, 1.3] },
+      { m: 'rock', every: 35, off: [10, 40], scale: [0.6, 1.6] },
+      { m: 'cabin', every: 240, off: [16, 32], scale: [0.9, 1.1] },
+      { m: 'boat', every: 110, onRiver: true, scale: [0.9, 1.2] },
+      { m: 'mountain', every: 420, off: [100, 140], scale: [1.0, 1.5] },
+    ],
+    hazards: [{ m: 'log', w: 3 }, { m: 'duck', w: 2, move: 'cross' }, { m: 'boulder', w: 1 }],
+    puddle: { color: 0x4aa3d8, effect: 'slow' },
+    music: { bpm: 108, root: 62, scale: 'major', lead: 'triangle' },
+  },
+  {
+    // A sunset endurance circuit, inspired by the great 24-hour races.
+    id: 'circuit', name: 'Sunset Circuit', icon: '🏟️', card: '#ff8a4c',
+    sky: 0xffb27a, fog: 0xffc59a, fogNear: 70, fogFar: 340,
+    ground: [0x5aa84a, 0x54a045], road: [0x55555e, 0x51515a], rumble: [0xffffff, 0xe5413b], line: 0xffffff,
+    bank: 0, curve: 0.014, hills: 3, rampChance: 0.05,
+    hemiSky: 0xffd2b0, sunColor: 0xffc38a,
+    props: [
+      { m: 'tyrewall', aligned: true, every: 12, off: [9.6, 9.6], chance: 0.4 },
+      { m: 'billboard', aligned: true, every: 45, off: [11.5, 11.5], chance: 0.7, tint: [0xffd23f, 0x3a86ff, 0xff4f8b, 0x2ecc71] },
+      { m: 'grandstand', aligned: true, every: 300, off: [15, 15], chance: 0.8 },
+      { m: 'pitgarage', aligned: true, every: 700, off: [14, 14] },
+      { m: 'floodlight', aligned: true, every: 110, off: [13, 13] },
+      { m: 'ferris', every: 900, off: [55, 80] },
+      { m: 'clockboard', aligned: true, every: 800, off: [18, 18] },
+      { m: 'tree', every: 30, off: [24, 60], scale: [0.9, 1.4] },
+    ],
+    arch: { every: 450, tint: [0x2f7cf6, 0xffd23f] },
+    hazards: [{ m: 'tyres', w: 3 }, { m: 'cone', w: 2 }],
+    puddle: { color: 0x2a2a35, effect: 'slip' },
+    music: { bpm: 140, root: 59, scale: 'minor', lead: 'square' },
+  },
 ];
 
 export const MENU_MUSIC = { id: 'menu', music: { bpm: 104, root: 60, scale: 'major', lead: 'triangle' } };

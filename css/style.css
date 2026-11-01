@@ -220,10 +220,10 @@ h2 { margin: 0; font-size: 34px; font-weight: 900; color: #fff; text-shadow: 0 3
 .gate.holding .fill { width: 100%; transition: width var(--hold, 3s) linear; }
 .gate.danger { background: #ffe1e1; }
 
-.cards { flex: 1; display: flex; gap: 16px; align-items: stretch; min-height: 0; padding-bottom: 10px; }
+.cards { flex: 1; display: grid; grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(2, 1fr); gap: 14px; min-height: 0; padding-bottom: 10px; }
 .card {
   position: relative; flex: 1; overflow: hidden; isolation: isolate; border-radius: 30px; border: 5px solid rgba(255, 255, 255, 0.8);
-  display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 8px; padding: 14% 8px 12px;
+  display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 6px; padding: 10px 8px 10px;
   color: #fff; font-weight: 900; text-shadow: 0 3px 0 rgba(0, 0, 0, 0.25);
   background: linear-gradient(var(--sky) 0 50%, var(--ground) 50% 100%);
   box-shadow: 0 9px 0 rgba(0, 0, 0, 0.2), 0 16px 30px rgba(0, 0, 0, 0.12);
@@ -243,13 +243,13 @@ h2 { margin: 0; font-size: 34px; font-weight: 900; color: #fff; text-shadow: 0 3
   background: repeating-linear-gradient(0deg, var(--rumble) 0 9px, #fff 9px 18px);
   clip-path: polygon(45% 0, 55% 0, 97% 100%, 3% 100%);
 }
-.card .ico { font-size: clamp(56px, 13vh, 110px); text-shadow: none; filter: drop-shadow(0 8px 0 rgba(0, 0, 0, 0.18)); }
+.card .ico { font-size: clamp(40px, 8vh, 72px); text-shadow: none; filter: drop-shadow(0 8px 0 rgba(0, 0, 0, 0.18)); }
 .card .lbl { font-size: clamp(17px, 2.8vh, 24px); text-align: center; background: rgba(20, 10, 50, 0.35); padding: 5px 14px; border-radius: 999px; }
-.card .sub { margin-top: auto; font-size: 24px; min-height: 34px; background: rgba(255, 255, 255, 0.92); color: var(--ink); text-shadow: none; padding: 2px 12px; border-radius: 999px; }
+.card .sub { margin-top: auto; font-size: 20px; min-height: 30px; background: rgba(255, 255, 255, 0.92); color: var(--ink); text-shadow: none; padding: 2px 12px; border-radius: 999px; }
 .card .dots { letter-spacing: 3px; color: #ff9d00; }
 .card.locked > * { opacity: 0.35; }
 .card.locked { filter: saturate(0.4) brightness(0.8); }
-.card .lock { opacity: 1 !important; position: absolute; inset: 0; display: grid; place-items: center; font-size: 80px; text-shadow: 0 6px 0 rgba(0, 0, 0, 0.3); }
+.card .lock { opacity: 1 !important; position: absolute; inset: 0; display: grid; place-items: center; font-size: 60px; text-shadow: 0 6px 0 rgba(0, 0, 0, 0.3); }
 .shake { animation: shake 0.4s; }
 @keyframes shake { 20%, 60% { transform: translateX(-10px); } 40%, 80% { transform: translateX(10px); } }
 
@@ -282,10 +282,10 @@ h2 { margin: 0; font-size: 34px; font-weight: 900; color: #fff; text-shadow: 0 3
 .item.preview { border-color: var(--yellow); background: #fff7d1; }
 .item .buy { background: var(--green); color: #fff; padding: 2px 10px; border-radius: 999px; animation: pulse 1s ease-in-out infinite; display: inline-block; }
 
-.sticker-grid { flex: 1; display: grid; grid-template-columns: repeat(5, 1fr); grid-template-rows: repeat(5, 1fr); gap: 12px; padding-bottom: 6px; }
+.sticker-grid { flex: 1; display: grid; grid-template-columns: repeat(6, 1fr); grid-template-rows: repeat(6, 1fr); gap: 12px; padding-bottom: 6px; }
 .sticker {
   border-radius: 24px; background: rgba(255, 255, 255, 0.9); display: grid; place-items: center; min-height: 0;
-  font-size: clamp(36px, 8vh, 70px); box-shadow: 0 5px 0 rgba(0, 0, 0, 0.12);
+  font-size: clamp(30px, 6.5vh, 60px); box-shadow: 0 5px 0 rgba(0, 0, 0, 0.12);
 }
 .sticker.locked { background: rgba(255, 255, 255, 0.45); }
 .sticker.locked span { filter: brightness(0); opacity: 0.15; }

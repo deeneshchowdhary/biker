@@ -79,7 +79,9 @@ export class Racer {
     b.root.position.copy(_v);
     b.root.rotation.y = -h;
     const slope = (track.heightAt(this.d + 1.5) - track.heightAt(this.d - 1.5)) / 3;
-    this.lean += (clamp(-this.vx * 0.32, -0.6, 0.6) - this.lean) * Math.min(1, dt * 8);
+    // Lean with steering, and lean into bends like a real racer (more at higher speed).
+    const bend = track.curvAt(this.d + 4) * this.speed * this.speed * 0.05;
+    this.lean += (clamp(-this.vx * 0.32 - bend, -0.8, 0.8) - this.lean) * Math.min(1, dt * 6);
     let rz = this.lean;
     if (this.wobble > 0) rz += Math.sin(this.wobble * 28) * 0.28 * Math.min(1, this.wobble * 2);
     let ry = 0;
@@ -134,6 +136,7 @@ export class Player extends Racer {
     const cfg = race.cfg;
     const racing = race.state === 'racing';
     const go = racing && (cfg.autoGo || inp.held.go);
+    this.throttle = go;
     let maxV = cfg.maxSpeed * this.stats.speed;
     if (!racing) maxV = 16; // coasting after the finish line
     if (this.boostT > 0) maxV *= 1.4;

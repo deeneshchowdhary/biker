@@ -33,6 +33,7 @@ export class Track {
     this.pz = new Float32Array(n);
     this.generate(rng);
     this.group = new THREE.Group();
+    if (world.river) this.riverY = bankHeight(world.river.to, world.bank) - 0.7;
     this.buildRoad();
     this.buildProps(rng);
     this.buildLines();
@@ -108,11 +109,20 @@ export class Track {
   buildRoad() {
     const w = this.world, bank = w.bank;
     const far = (i) => this.groundY - this.py[i];
-    const bands = [
-      [-140, -60, 'far'], [-60, -26, 'g'], [-26, -W - 3, 'g'], [-W - 3, -W - 0.7, 'g'], [-W - 0.7, -W, 'r'],
-      [-W, W, 'road'],
-      [W, W + 0.7, 'r'], [W + 0.7, W + 3, 'g'], [W + 3, 26, 'g'], [26, 60, 'g'], [60, 140, 'far'],
-    ];
+    // One side of the road, from the kerb outwards: [inner, outer, kind, innerY?, outerY?].
+    const side = (s) => {
+      const r = w.river;
+      let out = [[W, W + 0.7, 'r'], [W + 0.7, W + 3, 'g']];
+      if (r && r.side === s) {
+        const wy = this.riverY;
+        out.push([W + 3, r.from - 1.5, 'g'], [r.from - 1.5, r.from, 'sand', undefined, wy], [r.from, r.to, 'water', wy, wy],
+          [r.to, r.to + 1.5, 'sand', wy, undefined], [r.to + 1.5, 60, 'g']);
+      } else out.push([W + 3, 26, 'g'], [26, 60, 'g']);
+      out.push([60, 140, 'far']);
+      // Mirror to the left (negative offsets), keeping each band's low-to-high order.
+      return s > 0 ? out : out.map(([a, b, k, ya, yb]) => [-b, -a, k, yb, ya]);
+    };
+    const bands = [...side(-1).reverse(), [-W, W, 'road'], ...side(1)];
     const col = new THREE.Color();
     const { px, py, pz, hd } = this;
     for (let c0 = 0; c0 < this.n - 1; c0 += CHUNK_SEGS) {
@@ -135,15 +145,16 @@ export class Track {
       };
       for (let i = c0; i < c1; i++) {
         const alt = Math.floor(i / 3) % 2;
-        for (const [o0, o1, kind] of bands) {
-          const hex = kind === 'road' ? w.road[alt] : kind === 'r' ? w.rumble[i % 2] : w.ground[alt];
+        for (const [o0, o1, kind, ya, yb] of bands) {
+          const hex = kind === 'road' ? w.road[alt] : kind === 'r' ? w.rumble[i % 2]
+            : kind === 'water' ? w.river.color[alt] : kind === 'sand' ? w.river.sand : w.ground[alt];
           if (kind === 'far') {
             const inner = o0 < 0 ? o1 : o0;
             const yi = bankHeight(inner, bank);
             const [y0a, y1a, y0b, y1b] = o0 < 0 ? [far(i), yi, far(i + 1), yi] : [yi, far(i), yi, far(i + 1)];
             quad(i, o0, o1, y0a, y1a, y0b, y1b, w.ground[1]);
           } else {
-            const y0 = bankHeight(o0, bank), y1 = bankHeight(o1, bank);
+            const y0 = ya ?? bankHeight(o0, bank), y1 = yb ?? bankHeight(o1, bank);
             quad(i, o0, o1, y0, y1, y0, y1, hex);
           }
         }
@@ -175,9 +186,14 @@ export class Track {
           items.push({ d, off: def.off[0], side: -1 }, { d, off: def.off[0], side: 1 });
         }
       } else {
+        const r = w.river;
         let d = -50 + rng() * def.every;
         while (d < end) {
-          items.push({ d, off: def.off[0] + rng() * (def.off[1] - def.off[0]), side: rng() < 0.5 ? -1 : 1 });
+          if (def.onRiver) items.push({ d, off: (r.from + r.to) / 2 + (rng() - 0.5) * (r.to - r.from) * 0.5, side: r.side, onRiver: true });
+          else {
+            const it = { d, off: def.off[0] + rng() * (def.off[1] - def.off[0]), side: rng() < 0.5 ? -1 : 1 };
+            if (!(r && it.side === r.side && it.off > r.from - 2.5 && it.off < r.to + 2.5)) items.push(it);
+          }
           d += def.every * (0.4 + rng() * 1.2);
         }
       }
@@ -191,7 +207,8 @@ export class Track {
         const im = new THREE.InstancedMesh(def.geo, MAT, list.length);
         list.forEach((it, i) => {
           const h = this.pointAt(it.d, it.off * it.side, pos);
-          if (it.off) pos.y += bankHeight(it.off, w.bank) - 0.05;
+          if (it.onRiver) pos.y += this.riverY;
+          else if (it.off) pos.y += bankHeight(it.off, w.bank) - 0.05;
           const yaw = def.aligned || def.center ? -h + (it.side < 0 ? Math.PI : 0) : rng() * Math.PI * 2;
           q.setFromAxisAngle(up, yaw);
           const s = def.scale ? def.scale[0] + rng() * (def.scale[1] - def.scale[0]) : 1;

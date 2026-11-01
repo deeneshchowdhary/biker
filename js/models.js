@@ -5,6 +5,8 @@ import { ROAD_W as W, pick } from './util.js';
 
 export const MAT = new THREE.MeshLambertMaterial({ vertexColors: true, flatShading: true });
 export const MAT_GLOW = new THREE.MeshBasicMaterial({ vertexColors: true });
+// Smooth and a little glossy, for bikes and riders (racing paint and leathers).
+export const MAT_SHINY = new THREE.MeshPhongMaterial({ vertexColors: true, shininess: 70, specular: 0x3a3a3a });
 export const MAT_COIN = new THREE.MeshLambertMaterial({ vertexColors: true, emissive: 0x4a3000 });
 
 const HALF_PI = Math.PI / 2;
@@ -39,6 +41,14 @@ export function seg(a, b, t, color, round = false) {
   _qq.setFromUnitVectors(_up, _b.sub(_a).normalize());
   const geo = round ? cyl(t / 2, t / 2, len, 8) : box(t, len, t);
   return P(geo, color, { x: (a[0] + b[0]) / 2, y: (a[1] + b[1]) / 2, z: (a[2] + b[2]) / 2, q: _qq });
+}
+
+// A rounded limb (capsule) between two points.
+export function cap(a, b, r, color) {
+  _a.fromArray(a); _b.fromArray(b);
+  const len = Math.max(0.001, _a.distanceTo(_b));
+  _qq.setFromUnitVectors(_up, _b.sub(_a).normalize());
+  return P(new THREE.CapsuleGeometry(r, len, 3, 8), color, { x: (a[0] + b[0]) / 2, y: (a[1] + b[1]) / 2, z: (a[2] + b[2]) / 2, q: _qq });
 }
 
 export function merge(parts) {
@@ -268,34 +278,38 @@ const BIKES = {
   },
 };
 
-function riderParts(b, jersey, helmet) {
+// A rounded racer in leathers and a full-face helmet. Racing bikes put them in a low tuck.
+function riderParts(b, suit, helmet) {
   const { seatY: sy, seatZ: sz, barY, barZ, tuck } = b;
-  // Racers crouch low behind the windscreen; other bikes sit upright.
-  const hipY = sy + 0.12, shY = sy + (tuck ? 0.5 : 0.68), shZ = sz - (tuck ? 0.5 : 0.22);
-  const headY = sy + (tuck ? 0.74 : 0.98), headZ = sz - (tuck ? 0.68 : 0.3);
+  const hipY = sy + 0.14;
+  const sh = [0, sy + (tuck ? 0.5 : 0.68), sz - (tuck ? 0.5 : 0.22)];
+  const hy = sy + (tuck ? 0.78 : 1.0), hz = sz - (tuck ? 0.72 : 0.3);
   const knee = tuck ? [sy - 0.08, sz - 0.3] : [sy + 0.05, sz - 0.5];
   const foot = tuck ? [sy - 0.42, sz + 0.05] : [sy - 0.4, sz - 0.45];
-  const legs = tuck ? jersey : PANTS;
+  const VISOR = 0x1d2238;
   const parts = [
-    P(box(0.42, 0.22, 0.42), legs, { y: hipY, z: sz }),
-    seg([0, hipY, sz], [0, shY, shZ], 0.42, jersey),
-    P(sph(0.21, 12, 10), SKIN, { y: headY, z: headZ }),
-    P(new THREE.SphereGeometry(0.245, 12, 8, 0, Math.PI * 2, 0, Math.PI * 0.52), helmet, { y: headY + 0.02, z: headZ + 0.01 }),
-    P(box(0.08, 0.02, 0.02), DARK, { y: headY - 0.09, z: headZ - 0.2 }),
-    tuck
-      ? P(box(0.36, 0.1, 0.06), 0x222a44, { y: headY + 0.06, z: headZ - 0.2 })
-      : P(box(0.34, 0.04, 0.12), helmet, { y: headY + 0.05, z: headZ - 0.24 }),
+    P(sph(0.21, 14, 10), suit, { y: hipY, z: sz, sx: 1.05, sy: 0.8 }),
+    cap([0, hipY, sz], sh, 0.2, suit),
+    P(sph(0.14, 12, 8), suit, tuck ? { y: sh[1] + 0.13, z: sh[2] + 0.2 } : { y: sh[1] - 0.04, z: sh[2] + 0.17 }),
+    P(sph(0.255, 14, 10), helmet, { y: hy, z: hz }),
+    P(new THREE.SphereGeometry(0.262, 12, 4, 1.5 * Math.PI - 0.85, 1.7, Math.PI * 0.36, Math.PI * 0.26), VISOR, { y: hy, z: hz }),
+    P(new THREE.TorusGeometry(0.256, 0.03, 4, 12, Math.PI), WHITE, { y: hy, z: hz, ry: HALF_PI }),
   ];
-  if (tuck) parts.push(P(box(0.08, 0.06, 0.4), WHITE, { y: headY + 0.24, z: headZ + 0.02 }));
   for (const s of [-1, 1]) {
+    const shoulder = [s * 0.21, sh[1], sh[2]], hand = [s * 0.33, barY, barZ];
+    const elbow = [s * 0.31, (sh[1] + barY) / 2 - 0.05, (sh[2] + barZ) / 2 + 0.06];
+    const hip = [s * 0.15, hipY, sz - 0.05], kn = [s * 0.25, knee[0], knee[1]], ft = [s * 0.22, foot[0], foot[1]];
     parts.push(
-      seg([s * 0.16, hipY, sz - 0.1], [s * 0.22, knee[0], knee[1]], 0.15, legs),
-      seg([s * 0.22, knee[0], knee[1]], [s * 0.22, foot[0], foot[1]], 0.13, legs),
-      P(box(0.18, 0.1, 0.26), DARK, { x: s * 0.22, y: foot[0] - 0.05, z: foot[1] - 0.07 }),
-      seg([s * 0.24, shY, shZ], [s * 0.32, barY, barZ], 0.12, jersey),
-      P(sph(0.07, 6, 5), SKIN, { x: s * 0.33, y: barY, z: barZ }),
-      P(sph(0.035, 6, 4), DARK, { x: s * 0.075, y: headY, z: headZ - 0.195 }),
-      P(sph(0.04, 6, 4), 0xff9a9a, { x: s * 0.13, y: headY - 0.07, z: headZ - 0.15 }),
+      P(sph(0.05, 8, 6), WHITE, { x: s * 0.08, y: hy + 0.01, z: hz - 0.25, sz: 0.5 }),
+      P(sph(0.026, 6, 4), DARK, { x: s * 0.08, y: hy + 0.01, z: hz - 0.272 }),
+      P(sph(0.1, 10, 8), WHITE, { x: shoulder[0], y: shoulder[1] + 0.02, z: shoulder[2] }),
+      cap(shoulder, elbow, 0.075, suit),
+      cap(elbow, hand, 0.068, suit),
+      P(sph(0.078, 10, 8), DARK, { x: hand[0], y: hand[1], z: hand[2] }),
+      cap(hip, kn, 0.1, suit),
+      cap(kn, ft, 0.085, suit),
+      P(sph(0.065, 8, 6), WHITE, { x: s * 0.33, y: knee[0], z: knee[1] }),
+      cap([s * 0.22, foot[0] - 0.04, foot[1] + 0.06], [s * 0.22, foot[0] - 0.04, foot[1] - 0.16], 0.07, DARK),
     );
   }
   return parts;
@@ -328,11 +342,11 @@ function petParts(pet, C) {
 
 function wheelMesh(r) {
   const w = 0.16;
-  return mesh([
+  return new THREE.Mesh(merge([
     P(cyl(r, r, w, 14), DARK, { rz: HALF_PI }),
     P(cyl(r * 0.5, r * 0.5, w + 0.02, 10), METAL, { rz: HALF_PI }),
     P(box(w + 0.04, r * 1.7, 0.07), METAL),
-  ]);
+  ]), MAT_SHINY);
 }
 
 let shadowMat = null;
@@ -356,13 +370,20 @@ function shadowMesh() {
 }
 
 // look: { bike, color, helmet, jersey, pet, noodle }
+// Where each bike's silencer ends, for exhaust smoke.
+const EXHAUST = {
+  classic: [[0.2, 0.67, 0.88]], superbike: [[0.2, 0.47, 0.66]], hyper: [[0.22, 0.5, 0.95], [-0.22, 0.5, 0.95]],
+  gp: [[0.18, 0.82, 1.02]], motocross: [[0.22, 1.06, 0.84]], scooter: [[0.15, 0.28, 0.65]],
+  chopper: [[0.24, 0.35, 0.92]], banana: [[0.15, 0.3, 0.7]],
+};
+
 export function buildBike(look) {
   const b = BIKES[look.bike] || BIKES.classic;
   const root = new THREE.Group();
   const lean = new THREE.Group();
   lean.rotation.order = 'YXZ';
   root.add(lean);
-  const body = mesh([...b.body(look.color), ...riderParts(b, look.jersey ?? look.color, look.helmet), ...petParts(look.pet, look.color)]);
+  const body = mesh([...b.body(look.color), ...riderParts(b, look.jersey ?? look.color, look.helmet), ...petParts(look.pet, look.color)], MAT_SHINY);
   lean.add(body);
   const wheels = [wheelMesh(b.wheelR), wheelMesh(b.wheelR)];
   wheels[0].position.set(0, b.wheelR, b.wf);
@@ -380,10 +401,16 @@ export function buildBike(look) {
     flame.position.set(0, 0.66, 0.95);
     lean.add(flame);
   }
+  const exhausts = (EXHAUST[look.bike] || []).map((p) => {
+    const o = new THREE.Object3D();
+    o.position.fromArray(p);
+    lean.add(o);
+    return o;
+  });
   const shadow = shadowMesh();
   root.add(shadow);
   const dispose = () => root.traverse((o) => { if (o.isMesh && o.geometry !== SHADOW_GEO) o.geometry.dispose(); });
-  return { root, lean, body, wheels, wheelR: b.wheelR, noodle, flame, shadow, dispose };
+  return { root, lean, body, wheels, wheelR: b.wheelR, noodle, flame, shadow, exhausts, dispose };
 }
 
 // ---------------------------------------------------------------- scenery
@@ -518,6 +545,92 @@ export const PROPS = {
     seg([0, 5.9, 0], [-1.8, 6.2, 0], 0.18, 0x9a9ac0),
     P(box(0.7, 0.2, 0.4), WHITE, { x: -1.9, y: 6.1 }),
   ]),
+  // ---- River Hills
+  boat: () => merge([
+    P(sph(0.9, 10, 6, 0, Math.PI * 2, HALF_PI, HALF_PI), 0xc0622f, { sx: 0.8, sz: 2.0, y: 0.25 }),
+    P(box(1.3, 0.08, 2.6), 0x8b4a22, { y: 0.24 }),
+    P(box(1.2, 0.12, 0.3), 0x8b4a22, { y: 0.3, z: 0.4 }),
+    P(cyl(0.05, 0.05, 2.4, 6), 0x6b4423, { y: 1.4, z: -0.3 }),
+    P(new THREE.ConeGeometry(0.9, 1.9, 3), WHITE, { y: 1.5, z: 0.05, sx: 0.08 }),
+  ]),
+  cabin: () => {
+    const parts = [];
+    for (let y = 0.25; y < 2.6; y += 0.5) parts.push(P(cyl(0.25, 0.25, 4.6, 8), y % 1 < 0.5 ? 0x8b5a2b : 0x7a4b22, { y, rz: HALF_PI }));
+    parts.push(
+      P(box(4.2, 2.6, 3.6), 0x8b5a2b, { y: 1.3 }),
+      P(cyl(2.9, 2.9, 4.8, 3), 0x5b3a1e, { y: 3.4, rz: -HALF_PI, rx: -HALF_PI, sz: 0.55 }),
+      P(box(0.9, 1.5, 0.1), 0x4a2c14, { y: 0.75, z: 1.82 }),
+      P(box(0.8, 0.7, 0.1), 0xfff3a6, { x: 1.2, y: 1.5, z: 1.82 }),
+      P(box(0.5, 1.6, 0.5), 0x7d7d85, { x: -1.4, y: 3.6, z: -0.6 }),
+    );
+    return merge(parts);
+  },
+  reeds: () => {
+    const parts = [];
+    for (let k = 0; k < 7; k++) {
+      const a = k * 0.9, r = 0.3 + (k % 3) * 0.2;
+      parts.push(seg([Math.cos(a) * r, 0, Math.sin(a) * r], [Math.cos(a) * r * 1.4, 1.6 + (k % 3) * 0.3, Math.sin(a) * r * 1.4], 0.07, 0x5f9e3a));
+      if (k % 2) parts.push(P(cyl(0.07, 0.07, 0.35, 6), 0x7a4b22, { x: Math.cos(a) * r * 1.35, y: 1.5 + (k % 3) * 0.3, z: Math.sin(a) * r * 1.35 }));
+    }
+    return merge(parts);
+  },
+  // ---- Sunset Circuit
+  grandstand: () => {
+    const parts = [];
+    const crowd = [0xff4f8b, 0x3a86ff, 0xffd23f, 0x2ecc71, 0xffffff, 0xff8c42];
+    for (let k = 0; k < 6; k++) {
+      parts.push(P(box(1.6, 0.6, 30), 0x8a8f9c, { x: 1 + k * 1.5, y: 0.3 + k * 0.7 }));
+      for (let z = -14; z < 14; z += 2) parts.push(P(box(0.45, 0.55, 0.5), crowd[(k * 5 + z + 20) % crowd.length], { x: 0.8 + k * 1.5, y: 0.95 + k * 0.7, z: z + (k % 2) }));
+    }
+    parts.push(P(box(10, 0.3, 31), 0xf2f2f2, { x: 4.8, y: 7 }), P(box(10.2, 0.6, 0.3), 0xe63946, { x: 4.8, y: 6.7, z: -15.5 }));
+    for (const z of [-14, 0, 14]) parts.push(P(box(0.3, 7, 0.3), 0xcccccc, { x: 9.6, y: 3.5, z }));
+    return merge(parts);
+  },
+  pitgarage: () => {
+    const parts = [P(box(6, 4, 24), 0xf4f4f4, { x: 3, y: 2 }), P(box(6.2, 0.5, 24.2), 0x2f7cf6, { x: 3, y: 4.1 })];
+    for (let z = -9; z <= 9; z += 6) parts.push(P(box(0.1, 2.8, 4.6), 0x30303a, { x: -0.02, y: 1.4, z }));
+    return merge(parts);
+  },
+  tyrewall: () => {
+    const parts = [];
+    // Stacks alternate black and red/white, which reads as a tyre wall from the bike.
+    let k = 0;
+    for (let z = -5.4; z <= 5.4; z += 1.2, k++) parts.push(P(cyl(0.55, 0.55, 1.1, 6), [0x26262c, 0xe63946, 0x26262c, WHITE][k % 4], { y: 0.55, z }));
+    return merge(parts);
+  },
+  billboard: () => merge([
+    P(box(0.2, 2.2, 0.2), 0x9a9aaa, { y: 1.1, z: -2.6 }), P(box(0.2, 2.2, 0.2), 0x9a9aaa, { y: 1.1, z: 2.6 }),
+    P(box(0.25, 1.6, 6.4), WHITE, { y: 2.6 }), P(box(0.27, 0.4, 6.4), 0x2b2140, { y: 2.2 }),
+  ]),
+  floodlight: () => merge([
+    P(cyl(0.18, 0.25, 12, 6), 0x9a9aaa, { y: 6 }),
+    P(box(0.5, 1.6, 2.6), 0x55555f, { y: 12.4 }),
+    P(box(0.12, 1.3, 2.3), 0xfff6c8, { x: -0.28, y: 12.4 }),
+  ]),
+  ferris: () => {
+    const parts = [P(new THREE.TorusGeometry(9, 0.35, 6, 28), WHITE, { y: 12 })];
+    for (let k = 0; k < 10; k++) {
+      const a = (k / 10) * Math.PI * 2;
+      parts.push(seg([0, 12, 0], [Math.cos(a) * 9, 12 + Math.sin(a) * 9, 0], 0.15, 0xdddddd));
+      parts.push(P(box(1.2, 1.1, 1.2), [0xff4f8b, 0x3a86ff, 0xffd23f, 0x2ecc71, 0xff8c42][k % 5], { x: Math.cos(a) * 9, y: 12 + Math.sin(a) * 9 - 0.9 }));
+    }
+    parts.push(seg([0, 12, 0], [-5, 0, 1], 0.45, 0xbbbbbb), seg([0, 12, 0], [5, 0, 1], 0.45, 0xbbbbbb), seg([0, 12, 0], [-5, 0, -1], 0.45, 0xbbbbbb), seg([0, 12, 0], [5, 0, -1], 0.45, 0xbbbbbb));
+    return merge(parts);
+  },
+  clockboard: () => {
+    const parts = [
+      P(box(0.6, 8, 0.6), 0x9a9aaa, { y: 4, z: -2.6 }), P(box(0.6, 8, 0.6), 0x9a9aaa, { y: 4, z: 2.6 }),
+      P(box(0.5, 5, 6.4), 0x2b2140, { y: 8.5 }),
+      P(cyl(2, 2, 0.1, 24), WHITE, { x: -0.3, y: 8.5, rz: HALF_PI }),
+      P(box(0.1, 1.6, 0.18), DARK, { x: -0.36, y: 9.1 }),
+      P(box(0.1, 0.18, 1.2), 0xe63946, { x: -0.37, y: 8.5, z: -0.5 }),
+    ];
+    for (let k = 0; k < 12; k++) {
+      const a = (k / 12) * Math.PI * 2;
+      parts.push(P(box(0.1, 0.25, 0.25), DARK, { x: -0.35, y: 8.5 + Math.cos(a) * 1.7, z: Math.sin(a) * 1.7 }));
+    }
+    return merge(parts);
+  },
   arch: () => {
     const parts = [
       P(box(0.8, 7, 0.8), WHITE, { x: -(W + 1.6), y: 3.5 }),
@@ -596,6 +709,10 @@ export const HAZ = {
     for (const x of [-0.7, 0, 0.7]) parts.push(P(cone(0.28, 0.7, 6), 0xfff6e0, { x, y: 0.4, z: -1.6, rx: -HALF_PI }));
     return { hw: 1.15, hl: 1.4, h: 0.9, color: G, parts };
   },
+  boulder: () => ({
+    hw: 0.95, hl: 0.9, h: 1.3, color: 0x8f8f8f,
+    parts: [P(new THREE.DodecahedronGeometry(1.0), 0x8f8f8f, { y: 0.7, sy: 0.75 }), P(new THREE.DodecahedronGeometry(0.5), 0xa0a0a0, { x: 0.6, y: 0.4, z: 0.3 })],
+  }),
   egg: () => ({
     hw: 0.75, hl: 0.75, h: 1.8, color: 0xfff4d6,
     parts: [
@@ -634,6 +751,29 @@ export const HAZ = {
       parts.push(P(box(0.08, 0.55, 0.22), DARK, { x: s * 0.5, y: 0.8, rz: s * 0.4 }));
     }
     return { hw: 0.55, hl: 0.5, h: 1.5, color: DARK, parts };
+  },
+  log: () => ({
+    hw: 1.6, hl: 0.5, h: 1.0, color: 0x8b5a2b,
+    parts: [
+      P(cyl(0.45, 0.45, 3.2, 10), 0x8b5a2b, { y: 0.45, rz: HALF_PI }),
+      P(cyl(0.38, 0.38, 3.24, 10), 0xd9b48a, { y: 0.45, rz: HALF_PI }),
+      P(cyl(0.12, 0.08, 0.5, 6), 0x7a4b22, { x: 0.4, y: 0.95, rz: 0.3 }),
+    ],
+  }),
+  duck: () => {
+    const parts = [
+      P(sph(0.45, 10, 8), 0xffd83a, { y: 0.45, sz: 1.3 }),
+      P(sph(0.3, 10, 8), 0xffd83a, { y: 0.95, z: -0.35 }),
+      P(box(0.26, 0.08, 0.22), 0xff8c1a, { y: 0.9, z: -0.68 }),
+      P(sph(0.2, 8, 6), 0xf5c400, { y: 0.55, z: 0.5, sy: 0.6 }),
+    ];
+    for (const s of [-1, 1]) parts.push(P(sph(0.05, 6, 4), DARK, { x: s * 0.13, y: 1.02, z: -0.58 }), P(sph(0.2, 8, 6), 0xf5c400, { x: s * 0.4, y: 0.5, sx: 0.4, sz: 1.1 }));
+    return { hw: 0.5, hl: 0.6, h: 1.3, color: 0xffd83a, parts };
+  },
+  tyres: () => {
+    const parts = [];
+    for (let k = 0; k < 3; k++) parts.push(P(cyl(0.5, 0.5, 0.34, 12), 0x26262c, { y: 0.17 + k * 0.34 }), P(cyl(0.51, 0.51, 0.08, 12), k % 2 ? WHITE : 0xe63946, { y: 0.17 + k * 0.34 }));
+    return { hw: 0.55, hl: 0.55, h: 1.05, color: 0x26262c, parts };
   },
   cone: () => ({
     hw: 0.55, hl: 0.55, h: 1.15, color: 0xff6d00,

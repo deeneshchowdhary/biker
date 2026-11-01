@@ -54,6 +54,80 @@ export class Confetti {
   }
 }
 
+// Soft grey exhaust puffs that grow and fade. Uses a tiny shader so each puff can fade on its own.
+export class Smoke {
+  constructor(scene, n = 320) {
+    this.n = n;
+    this.next = 0;
+    this.alive = 0;
+    this.pos = new Float32Array(n * 3).fill(-1e4);
+    this.vel = new Float32Array(n * 3);
+    this.life = new Float32Array(n);
+    this.max = new Float32Array(n);
+    this.alpha = new Float32Array(n);
+    this.size = new Float32Array(n);
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.BufferAttribute(this.pos, 3));
+    g.setAttribute('alpha', new THREE.BufferAttribute(this.alpha, 1));
+    g.setAttribute('size', new THREE.BufferAttribute(this.size, 1));
+    this.material = new THREE.ShaderMaterial({
+      uniforms: { scale: { value: 800 }, color: { value: new THREE.Color(0xe4e4ea) } },
+      vertexShader: `
+        attribute float alpha; attribute float size; uniform float scale; varying float vAlpha;
+        void main() {
+          vAlpha = alpha;
+          vec4 mv = modelViewMatrix * vec4(position, 1.0);
+          gl_PointSize = size * scale / -mv.z;
+          gl_Position = projectionMatrix * mv;
+        }`,
+      fragmentShader: `
+        uniform vec3 color; varying float vAlpha;
+        void main() {
+          float d = length(gl_PointCoord - 0.5);
+          if (d > 0.5) discard;
+          gl_FragColor = vec4(color, vAlpha * smoothstep(0.5, 0.1, d));
+        }`,
+      transparent: true,
+      depthWrite: false,
+    });
+    this.points = new THREE.Points(g, this.material);
+    this.points.frustumCulled = false;
+    scene.add(this.points);
+  }
+
+  puff(p) {
+    const i = this.next;
+    this.next = (this.next + 1) % this.n;
+    this.pos[i * 3] = p.x + (Math.random() - 0.5) * 0.1;
+    this.pos[i * 3 + 1] = p.y;
+    this.pos[i * 3 + 2] = p.z + (Math.random() - 0.5) * 0.1;
+    this.vel[i * 3] = (Math.random() - 0.5) * 0.8;
+    this.vel[i * 3 + 1] = 0.5 + Math.random() * 0.6;
+    this.vel[i * 3 + 2] = (Math.random() - 0.5) * 0.8;
+    this.max[i] = this.life[i] = 0.7 + Math.random() * 0.4;
+    this.alpha[i] = 0;
+    this.alive = this.n;
+  }
+
+  update(dt) {
+    if (!this.alive) return;
+    let alive = 0;
+    for (let i = 0; i < this.n; i++) {
+      if (this.life[i] <= 0) continue;
+      this.life[i] -= dt;
+      if (this.life[i] <= 0) { this.alpha[i] = 0; this.pos[i * 3 + 1] = -1e4; continue; }
+      alive++;
+      const t = 1 - this.life[i] / this.max[i];
+      this.size[i] = 0.3 + t * 1.3;
+      this.alpha[i] = 0.42 * (1 - t) * Math.min(1, t * 8);
+      for (let k = 0; k < 3; k++) this.pos[i * 3 + k] += this.vel[i * 3 + k] * dt;
+    }
+    this.alive = alive;
+    const a = this.points.geometry.attributes;
+    a.position.needsUpdate = a.alpha.needsUpdate = a.size.needsUpdate = true;
+  }
+}
+
 export class Stage {
   constructor(canvas) {
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: (window.devicePixelRatio || 1) < 2, powerPreference: 'high-performance' });
@@ -69,6 +143,7 @@ export class Stage {
     this.ground.rotation.x = -Math.PI / 2;
     this.scene.add(this.ground);
     this.confetti = new Confetti(this.scene);
+    this.smoke = new Smoke(this.scene);
     this.frames = 0; this.frameTime = 0; this.slowWindows = 0;
     this.resize();
     // iPad Home Screen apps can report a stale window size, so watch the canvas itself.
@@ -86,6 +161,7 @@ export class Stage {
     this.camera.updateProjectionMatrix();
     this.ground.material.color.set(w.ground[1]);
     this.hemi.color.set(w.hemiSky ?? 0xffffff);
+    this.sun.color.set(w.sunColor ?? 0xffffff);
     this.hemi.groundColor.set(w.ground[0]);
   }
 
@@ -114,7 +190,11 @@ export class Stage {
     }
   }
 
-  render() { this.renderer.render(this.scene, this.camera); }
+  render() {
+    const fov = THREE.MathUtils.degToRad(this.camera.fov);
+    this.smoke.material.uniforms.scale.value = this.renderer.domElement.height / (2 * Math.tan(fov / 2));
+    this.renderer.render(this.scene, this.camera);
+  }
 }
 
 export class Showroom {

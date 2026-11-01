@@ -126,28 +126,78 @@ class AudioEngine {
     }
   }
 
-  // ---- engine
+  // ---- engine: a 4-cylinder racing bike that revs through the gears
   engineStart() {
     const c = this.ctx;
     if (!c || this.eng) return;
-    const o1 = c.createOscillator(), o2 = c.createOscillator(), f = c.createBiquadFilter(), g = c.createGain();
-    o1.type = 'sawtooth'; o2.type = 'square';
-    o1.frequency.value = 60; o2.frequency.value = 31;
-    f.type = 'lowpass'; f.frequency.value = 400; f.Q.value = 2;
-    g.gain.value = 0;
-    o1.connect(f); o2.connect(f); f.connect(g); g.connect(this.sfx);
-    o1.start(); o2.start();
-    this.eng = { o1, o2, f, g };
+    const o1 = c.createOscillator(), o2 = c.createOscillator(), o3 = c.createOscillator();
+    o1.type = 'sawtooth'; o2.type = 'square'; o3.type = 'sawtooth';
+    const g1 = c.createGain(), g2 = c.createGain(), g3 = c.createGain();
+    g1.gain.value = 0.5; g2.gain.value = 0.35; g3.gain.value = 0.18;
+    // Rasp: filtered noise riding on top of the tone.
+    const rasp = c.createBufferSource();
+    rasp.buffer = this.noiseBuf; rasp.loop = true;
+    const rf = c.createBiquadFilter(); rf.type = 'bandpass'; rf.Q.value = 3;
+    const rg = c.createGain(); rg.gain.value = 0.12;
+    // Soft clipping gives the growl; the lowpass opens up with the throttle.
+    const shaper = c.createWaveShaper();
+    const curve = new Float32Array(512);
+    for (let i = 0; i < 512; i++) { const x = (i / 255.5) - 1; curve[i] = Math.tanh(x * 3.5); }
+    shaper.curve = curve;
+    const f = c.createBiquadFilter(); f.type = 'lowpass'; f.Q.value = 1.5;
+    const g = c.createGain(); g.gain.value = 0;
+    o1.connect(g1); o2.connect(g2); o3.connect(g3); rasp.connect(rf); rf.connect(rg);
+    g1.connect(shaper); g2.connect(shaper); g3.connect(shaper); rg.connect(shaper);
+    shaper.connect(f); f.connect(g); g.connect(this.sfx);
+    const t = c.currentTime;
+    for (const o of [o1, o2, o3]) o.start(t);
+    rasp.start(t);
+    this.eng = { o1, o2, o3, rf, f, g, rasp, gear: 0, rpm: 3000, shift: 0, blip: 0 };
   }
 
-  engineSet(frac, boost) {
+  // A quick throttle blip, e.g. revving on the start line.
+  engineBlip() { if (this.eng) this.eng.blip = 1; }
+
+  engineSet(speed, throttle, boost, dt) {
     const e = this.eng;
     if (!e) return;
-    const t = this.ctx.currentTime, f1 = 55 + frac * 110 + (boost ? 30 : 0);
-    e.o1.frequency.setTargetAtTime(f1, t, 0.08);
-    e.o2.frequency.setTargetAtTime(f1 * 0.5 + 1.5, t, 0.08);
-    e.f.frequency.setTargetAtTime(350 + frac * 900, t, 0.1);
-    e.g.gain.setTargetAtTime(0.03 + frac * 0.03, t, 0.1);
+    const GEARS = [0, 8, 14, 20, 26, 32, 40, 99];
+    let gear = 0;
+    while (gear < GEARS.length - 2 && speed > GEARS[gear + 1]) gear++;
+    if (gear > e.gear && throttle) { e.shift = 0.12; this.pop(0.12); }
+    e.gear = gear;
+    const lo = GEARS[gear], hi = GEARS[gear + 1];
+    const inGear = Math.min(1, (speed - lo) / (hi - lo));
+    e.blip = Math.max(0, e.blip - dt * 2.5);
+    e.shift = Math.max(0, e.shift - dt);
+    let target = speed < 1 ? 2400 + e.blip * 7000 : 4500 + inGear * 9000 + (throttle ? 600 : -800) + (boost ? 1200 : 0);
+    if (e.shift > 0) target -= 3500;
+    e.rpm += (target - e.rpm) * Math.min(1, dt * (e.shift > 0 ? 30 : 10));
+    const fire = (e.rpm / 60) * 2; // 4-cylinder, 4-stroke firing frequency
+    const t = this.ctx.currentTime;
+    e.o1.frequency.setTargetAtTime(fire, t, 0.02);
+    e.o2.frequency.setTargetAtTime(fire * 0.5, t, 0.02);
+    e.o3.frequency.setTargetAtTime(fire * 2.01, t, 0.02);
+    e.rf.frequency.setTargetAtTime(fire * 3, t, 0.03);
+    const open = throttle || e.blip > 0.1 ? 1 : 0.35;
+    e.f.frequency.setTargetAtTime(500 + fire * 4 * open + (boost ? 1500 : 0), t, 0.05);
+    e.g.gain.setTargetAtTime(0.05 + 0.05 * open + (boost ? 0.03 : 0), t, 0.06);
+    // Crackles from the exhaust when easing off at speed.
+    if (!throttle && speed > 12 && Math.random() < dt * 7) this.pop(0.08);
+  }
+
+  pop(vol = 0.1) {
+    this.noise(0.05, { filter: 'bandpass', freq: 900 + Math.random() * 900, vol });
+    this.tone(70 + Math.random() * 40, 0.06, { type: 'square', vol: vol * 0.6 });
+  }
+
+  // A rival zooming past: a quick Doppler-style drop in pitch.
+  passBy() {
+    const now = this.ctx?.currentTime ?? 0;
+    if (!this.ctx || now - (this.lastPass || 0) < 0.4) return;
+    this.lastPass = now;
+    this.tone(420, 0.55, { type: 'sawtooth', slide: 210, vol: 0.06, attack: 0.05 });
+    this.noise(0.5, { filter: 'bandpass', freq: 1800, slide: 500, vol: 0.08 });
   }
 
   engineStop() {
@@ -155,7 +205,7 @@ class AudioEngine {
     if (!e) return;
     const t = this.ctx.currentTime;
     e.g.gain.setTargetAtTime(0, t, 0.05);
-    e.o1.stop(t + 0.3); e.o2.stop(t + 0.3);
+    for (const o of [e.o1, e.o2, e.o3, e.rasp]) o.stop(t + 0.3);
     this.eng = null;
   }
 

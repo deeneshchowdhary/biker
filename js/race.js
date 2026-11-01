@@ -109,8 +109,13 @@ export class Race {
       const n = Math.ceil(this.countT);
       if (n !== this.lastCount) {
         this.lastCount = n;
-        if (n > 0) { this.hud.countdown(String(n)); audio.beep(false); audio.speak(['One', 'Two', 'Three'][n - 1]); }
-        else { this.state = 'racing'; this.hud.countdown('GO!'); audio.beep(true); audio.speak('Go!'); audio.engineStart(); }
+        if (n > 0) {
+          this.hud.countdown(String(n));
+          audio.beep(false);
+          audio.speak(['One', 'Two', 'Three'][n - 1]);
+          audio.engineStart();
+          audio.engineBlip();
+        } else { this.state = 'racing'; this.hud.countdown('GO!'); audio.beep(true); audio.speak('Go!'); audio.engineBlip(); }
       }
     } else if (this.state === 'racing') {
       this.time += dt;
@@ -130,13 +135,43 @@ export class Race {
     }
     this.obs.update(dt, this.clock, P.d);
     for (const r of this.racers) r.updateModel(this.track, dt);
+    this.exhaustSmoke(dt);
+    this.passBys();
     this.stage.confetti.update(dt);
+    this.stage.smoke.update(dt);
     this.updateCamera(dt);
     this.hud.update(this);
-    audio.engineSet(clamp(P.speed / 45, 0, 1), P.boostT > 0);
+    audio.engineSet(P.speed, !!P.throttle, P.boostT > 0, dt);
     if (this.state === 'finished') {
       this.endT += dt;
       if (this.endT > 3 && !this.done) { this.done = true; this.onDone?.(this.results()); }
+    }
+  }
+
+  // Puffs from the silencer once a bike is going fast, and lots while boosting.
+  exhaustSmoke(dt) {
+    const P = this.player;
+    for (const r of this.racers) {
+      if (Math.abs(r.d - P.d) > 45 || !r.bike.exhausts.length) continue;
+      const rate = Math.max(0, r.speed / this.cfg.maxSpeed - 0.6) * 90 + (r.boostT > 0 ? 45 : 0);
+      r.smokeAcc = (r.smokeAcc || 0) + rate * dt;
+      if (r.smokeAcc < 1) continue;
+      r.root.updateMatrixWorld(true);
+      for (; r.smokeAcc >= 1; r.smokeAcc--) {
+        for (const ex of r.bike.exhausts) this.stage.smoke.puff(ex.getWorldPosition(_a));
+      }
+    }
+  }
+
+  // A whoosh when a rival zips past close by.
+  passBys() {
+    const P = this.player;
+    for (const r of this.rivals) {
+      const rel = r.d - P.d;
+      if (r.prevRel !== undefined && Math.sign(rel) !== Math.sign(r.prevRel) && Math.abs((r.x - P.x) * W) < 4 && Math.abs(r.speed - P.speed) > 2) {
+        audio.passBy();
+      }
+      r.prevRel = rel;
     }
   }
 
