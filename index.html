@@ -38,6 +38,19 @@
       <button class="pill round" data-act="pause" aria-label="Pause">⏸</button>
     </div>
     <div id="hud-progress"><div class="bar"><span class="flag">🏁</span></div></div>
+    <div id="speedo" class="speedo">
+      <svg viewBox="0 0 120 120" aria-hidden="true">
+        <circle cx="60" cy="60" r="56" fill="rgba(20,16,40,0.78)" stroke="#fff" stroke-width="4"/>
+        <circle cx="60" cy="60" r="44" fill="none" stroke="rgba(255,255,255,0.18)" stroke-width="9" stroke-dasharray="207.3 276.5" transform="rotate(135 60 60)"/>
+        <circle cx="60" cy="60" r="44" fill="none" stroke="#ff3b30" stroke-width="9" stroke-dasharray="31.1 276.5" transform="rotate(364.5 60 60)"/>
+        <circle id="speedo-fill" cx="60" cy="60" r="44" fill="none" stroke="#ffd23f" stroke-width="9" stroke-dasharray="0 276.5" transform="rotate(135 60 60)"/>
+        <g id="speedo-ticks"></g>
+        <line id="speedo-needle" x1="60" y1="60" x2="60" y2="24" stroke="#ff3b30" stroke-width="4" stroke-linecap="round" transform="rotate(225 60 60)"/>
+        <circle cx="60" cy="60" r="7" fill="#fff"/>
+      </svg>
+      <div class="speedo-gear" id="speedo-gear">N</div>
+      <div class="speedo-val"><b id="speedo-val">0</b><small>km/h</small></div>
+    </div>
     <div id="countdown"></div>
     <div id="toast"></div>
   </div>

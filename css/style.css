@@ -52,6 +52,17 @@ button { font-family: inherit; color: inherit; border: none; background: none; c
 #hud-progress .dot.me { width: 28px; height: 28px; border: 4px solid #fff; z-index: 2; box-shadow: 0 0 0 3px var(--pink); }
 #hud-progress .flag { position: absolute; right: 0; top: 50%; transform: translate(70%, -55%); font-size: 26px; }
 
+.speedo { position: absolute; right: calc(14px + var(--safe-r)); top: calc(92px + var(--safe-t)); width: 150px; height: 150px; filter: drop-shadow(0 5px 0 rgba(0, 0, 0, 0.18)); }
+.speedo svg { width: 100%; height: 100%; display: block; }
+.speedo-val { position: absolute; left: 0; right: 0; top: 88px; text-align: center; color: #fff; line-height: 1; }
+.speedo-val b { display: block; font-size: 30px; font-weight: 900; font-variant-numeric: tabular-nums; }
+.speedo-val small { font-size: 12px; font-weight: 800; opacity: 0.8; }
+.speedo-gear {
+  position: absolute; left: 50%; top: 32px; transform: translateX(-50%); min-width: 26px; padding: 1px 6px; border-radius: 8px;
+  background: #ffd23f; color: var(--ink); font-size: 16px; font-weight: 900; text-align: center;
+}
+.speedo.redline .speedo-gear { background: #ff3b30; color: #fff; }
+
 #countdown, #toast {
   position: absolute; left: 0; right: 0; text-align: center; font-weight: 900; color: #fff; opacity: 0;
   text-shadow: 0 8px 0 rgba(0, 0, 0, 0.25), 0 0 30px rgba(0, 0, 0, 0.25);
@@ -282,7 +293,7 @@ h2 { margin: 0; font-size: 34px; font-weight: 900; color: #fff; text-shadow: 0 3
 .item.preview { border-color: var(--yellow); background: #fff7d1; }
 .item .buy { background: var(--green); color: #fff; padding: 2px 10px; border-radius: 999px; animation: pulse 1s ease-in-out infinite; display: inline-block; }
 
-.sticker-grid { flex: 1; display: grid; grid-template-columns: repeat(6, 1fr); grid-template-rows: repeat(6, 1fr); gap: 12px; padding-bottom: 6px; }
+.sticker-grid { flex: 1; display: grid; grid-template-columns: repeat(7, 1fr); grid-template-rows: repeat(6, 1fr); gap: 12px; padding-bottom: 6px; }
 .sticker {
   border-radius: 24px; background: rgba(255, 255, 255, 0.9); display: grid; place-items: center; min-height: 0;
   font-size: clamp(30px, 6.5vh, 60px); box-shadow: 0 5px 0 rgba(0, 0, 0, 0.12);
@@ -338,6 +349,10 @@ input[type="range"] { width: 240px; accent-color: var(--blue); touch-action: pan
 @media (max-height: 760px) {
   .ctl { width: 86px; height: 86px; }
   .wheel { width: 190px; height: 190px; }
+  .speedo { width: 130px; height: 130px; }
+  .speedo-val { top: 76px; }
+  .speedo-val b { font-size: 26px; }
+  .speedo-gear { top: 27px; }
   .go { width: 110px; height: 110px; }
   .bonk-half { width: 92px; height: 80px; }
   .cluster { gap: 10px; }

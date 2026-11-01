@@ -71,6 +71,7 @@ const WORLD_STICKERS = {
   neon: ['🌃', '🎡', '🚦', '🎆'],
   river: ['🏞️', '🛶', '🐟', '🦆'],
   circuit: ['🌅', '🏟️', '🔧', '🕛'],
+  night: ['🌙', '🔦', '🎇', '🦉'],
 };
 
 export const STICKERS = [];

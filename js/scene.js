@@ -77,7 +77,9 @@ export class Smoke {
         void main() {
           vAlpha = alpha;
           vec4 mv = modelViewMatrix * vec4(position, 1.0);
-          gl_PointSize = size * scale / -mv.z;
+          // Fade puffs right in front of the camera so they never become big blobs.
+          vAlpha *= smoothstep(3.0, 9.0, -mv.z);
+          gl_PointSize = min(size * scale / -mv.z, 160.0);
           gl_Position = projectionMatrix * mv;
         }`,
       fragmentShader: `
@@ -161,6 +163,8 @@ export class Stage {
     this.camera.updateProjectionMatrix();
     this.ground.material.color.set(w.ground[1]);
     this.hemi.color.set(w.hemiSky ?? 0xffffff);
+    this.hemi.intensity = 1.7 * (w.light ?? 1);
+    this.sun.intensity = 1.7 * (w.light ?? 1);
     this.sun.color.set(w.sunColor ?? 0xffffff);
     this.hemi.groundColor.set(w.ground[0]);
   }

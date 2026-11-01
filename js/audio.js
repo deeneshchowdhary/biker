@@ -200,7 +200,33 @@ class AudioEngine {
     this.noise(0.5, { filter: 'bandpass', freq: 1800, slide: 500, vol: 0.08 });
   }
 
+  // Crowd roar that swells as you ride past fans (level 0..1).
+  crowd(level) {
+    const c = this.ctx;
+    if (!c) return;
+    if (!this.crowdNode) {
+      const src = c.createBufferSource();
+      src.buffer = this.noiseBuf; src.loop = true;
+      const f = c.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 1100; f.Q.value = 0.6;
+      const g = c.createGain(); g.gain.value = 0;
+      src.connect(f); f.connect(g); g.connect(this.sfx);
+      src.start();
+      this.crowdNode = { src, g };
+    }
+    const t = c.currentTime;
+    this.crowdNode.g.gain.setTargetAtTime(level * (0.13 + 0.04 * Math.sin(t * 3)), t, 0.25);
+    // The odd "woo!" from the fans.
+    if (level > 0.6 && Math.random() < 0.012) this.tone(500 + Math.random() * 300, 0.5, { type: 'sine', slide: 900, vol: 0.05 * level, attack: 0.08 });
+  }
+
+  crowdStop() {
+    if (!this.crowdNode) return;
+    this.crowdNode.src.stop();
+    this.crowdNode = null;
+  }
+
   engineStop() {
+    this.crowdStop();
     const e = this.eng;
     if (!e) return;
     const t = this.ctx.currentTime;
@@ -251,6 +277,7 @@ class AudioEngine {
 
   pauseAll() {
     this.musicStop();
+    if (this.crowdNode) this.crowdNode.g.gain.setTargetAtTime(0, this.ctx.currentTime, 0.05);
     if (this.eng) this.eng.g.gain.setTargetAtTime(0, this.ctx.currentTime, 0.05);
   }
 

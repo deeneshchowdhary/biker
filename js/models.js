@@ -48,7 +48,7 @@ export function cap(a, b, r, color) {
   _a.fromArray(a); _b.fromArray(b);
   const len = Math.max(0.001, _a.distanceTo(_b));
   _qq.setFromUnitVectors(_up, _b.sub(_a).normalize());
-  return P(new THREE.CapsuleGeometry(r, len, 3, 8), color, { x: (a[0] + b[0]) / 2, y: (a[1] + b[1]) / 2, z: (a[2] + b[2]) / 2, q: _qq });
+  return P(new THREE.CapsuleGeometry(r, len, 2, 7), color, { x: (a[0] + b[0]) / 2, y: (a[1] + b[1]) / 2, z: (a[2] + b[2]) / 2, q: _qq });
 }
 
 export function merge(parts) {
@@ -81,31 +81,43 @@ export const mesh = (parts, mat = MAT) => new THREE.Mesh(merge(parts), mat);
 // ---------------------------------------------------------------- bikes
 
 const BIKES = {
-  // Sport racing bike: fairing, windscreen, clip-on bars, upswept tail.
+  // Formula One style racer: rounded body, front and rear wings, sidepods, slick tyres.
   classic: {
-    wheelR: 0.36, wf: -0.8, wb: 0.75, seatY: 0.98, seatZ: 0.3, barY: 0.98, barZ: -0.5, tuck: true,
+    wheelR: 0.36, wf: -0.8, wb: 0.75, seatY: 0.98, seatZ: 0.3, barY: 0.96, barZ: -0.5, tuck: true, slick: 0xffd23f,
     body: (C) => {
+      const ACC = 0xffd23f;
       const parts = [
-        P(box(0.48, 0.42, 0.95), C, { y: 0.66, z: -0.3 }),
-        P(box(0.54, 0.07, 0.97), WHITE, { y: 0.74, z: -0.3 }),
-        P(box(0.4, 0.14, 0.7), DARK, { y: 0.4, z: -0.25 }),
-        P(box(0.46, 0.36, 0.34), C, { y: 0.9, z: -0.66, rx: 0.5 }),
-        P(box(0.38, 0.3, 0.04), 0x9fe3ff, { y: 1.1, z: -0.63, rx: 0.75 }),
-        P(box(0.42, 0.22, 0.45), C, { y: 0.92, z: -0.2 }),
-        P(box(0.34, 0.1, 0.4), DARK, { y: 0.96, z: 0.25 }),
-        P(box(0.3, 0.2, 0.55), C, { y: 1.0, z: 0.62, rx: -0.25 }),
-        P(box(0.31, 0.05, 0.56), WHITE, { y: 1.08, z: 0.62, rx: -0.25 }),
-        P(box(0.2, 0.06, 0.06), 0xff3030, { y: 0.98, z: 0.9 }),
-        seg([0, 0.36, -0.8], [0, 0.95, -0.55], 0.09, METAL, true),
+        cap([0, 0.7, -0.78], [0, 0.78, 0.55], 0.27, C),
+        P(sph(0.25, 14, 10), C, { y: 0.66, z: -0.98, sz: 1.7, sy: 0.75 }),
+        P(sph(0.1, 10, 8), DARK, { y: 0.88, z: -0.98, sz: 0.5 }),
+        P(sph(0.22, 14, 8, 0, Math.PI * 2, 0, HALF_PI), 0x9fe3ff, { y: 0.9, z: -0.66, sx: 0.85, sz: 1.5, rx: -0.45 }),
+        cap([0, 0.96, -0.1], [0, 0.94, 0.4], 0.12, DARK),
+        P(box(0.03, 0.26, 0.55), C, { y: 1.05, z: 0.62, rx: -0.15 }),
+        // front wing
+        P(box(1.15, 0.05, 0.3), DARK, { y: 0.22, z: -1.32 }),
+        P(box(1.05, 0.04, 0.18), ACC, { y: 0.3, z: -1.25, rx: -0.3 }),
+        seg([0, 0.55, -1.0], [0, 0.24, -1.28], 0.05, DARK),
+        // rear wing
+        P(box(0.92, 0.06, 0.32), DARK, { y: 1.36, z: 0.98 }),
+        P(box(0.88, 0.05, 0.18), ACC, { y: 1.46, z: 0.93, rx: 0.3 }),
+        // centre exhaust and red rain light
+        P(cyl(0.08, 0.09, 0.4, 10), METAL, { y: 0.62, z: 0.95, rx: HALF_PI }),
+        P(box(0.14, 0.08, 0.03), 0xff2020, { y: 0.8, z: 1.08 }),
+        seg([0, 0.36, -0.8], [0, 0.95, -0.55], 0.1, 0xd4a017, true),
         seg([0, 0.45, 0.1], [0, 0.36, 0.75], 0.1, DARK),
-        P(box(0.62, 0.05, 0.05), DARK, { y: 0.98, z: -0.5 }),
-        P(cyl(0.07, 0.09, 0.55, 8), METAL, { x: 0.2, y: 0.6, z: 0.6, rx: HALF_PI - 0.25 }),
+        P(box(0.62, 0.05, 0.05), DARK, { y: 0.96, z: -0.5 }),
       ];
       for (const s of [-1, 1]) {
         parts.push(
-          P(cyl(0.06, 0.06, 0.04, 8), LIGHT, { x: s * 0.1, y: 0.86, z: -0.84, rx: HALF_PI }),
-          P(cyl(0.15, 0.15, 0.02, 12), WHITE, { x: s * 0.25, y: 0.62, z: -0.3, rz: HALF_PI }),
-          P(cyl(0.07, 0.07, 0.025, 8), DARK, { x: s * 0.255, y: 0.62, z: -0.3, rz: HALF_PI }),
+          cap([s * 0.3, 0.56, -0.5], [s * 0.3, 0.52, 0.3], 0.13, C),
+          P(sph(0.09, 8, 6), DARK, { x: s * 0.3, y: 0.56, z: -0.62, sz: 0.4 }),
+          cap([s * 0.27, 0.74, -0.85], [s * 0.27, 0.78, 0.5], 0.035, WHITE),
+          P(box(0.04, 0.24, 0.38), C, { x: s * 0.57, y: 0.3, z: -1.3 }),
+          P(box(0.04, 0.42, 0.42), C, { x: s * 0.46, y: 1.32, z: 0.97 }),
+          seg([s * 0.12, 0.92, 0.72], [s * 0.12, 1.34, 0.92], 0.05, DARK),
+          P(cyl(0.12, 0.12, 0.02, 12), WHITE, { x: s * 0.42, y: 0.56, z: -0.1, rz: HALF_PI }),
+          P(cyl(0.055, 0.055, 0.025, 8), DARK, { x: s * 0.432, y: 0.56, z: -0.1, rz: HALF_PI }),
+          P(sph(0.05, 8, 6), LIGHT, { x: s * 0.1, y: 0.72, z: -1.37 }),
         );
       }
       return parts;
@@ -291,7 +303,7 @@ function riderParts(b, suit, helmet) {
     P(sph(0.21, 14, 10), suit, { y: hipY, z: sz, sx: 1.05, sy: 0.8 }),
     cap([0, hipY, sz], sh, 0.2, suit),
     P(sph(0.14, 12, 8), suit, tuck ? { y: sh[1] + 0.13, z: sh[2] + 0.2 } : { y: sh[1] - 0.04, z: sh[2] + 0.17 }),
-    P(sph(0.255, 14, 10), helmet, { y: hy, z: hz }),
+    P(sph(0.255, 12, 9), helmet, { y: hy, z: hz }),
     P(new THREE.SphereGeometry(0.262, 12, 4, 1.5 * Math.PI - 0.85, 1.7, Math.PI * 0.36, Math.PI * 0.26), VISOR, { y: hy, z: hz }),
     P(new THREE.TorusGeometry(0.256, 0.03, 4, 12, Math.PI), WHITE, { y: hy, z: hz, ry: HALF_PI }),
   ];
@@ -340,13 +352,38 @@ function petParts(pet, C) {
   return parts;
 }
 
-function wheelMesh(r) {
-  const w = 0.16;
-  return new THREE.Mesh(merge([
-    P(cyl(r, r, w, 14), DARK, { rz: HALF_PI }),
+function wheelMesh(r, slick) {
+  const w = slick ? 0.26 : 0.16;
+  const parts = [
+    P(cyl(r, r, w, 16), DARK, { rz: HALF_PI }),
     P(cyl(r * 0.5, r * 0.5, w + 0.02, 10), METAL, { rz: HALF_PI }),
     P(box(w + 0.04, r * 1.7, 0.07), METAL),
-  ]), MAT_SHINY);
+  ];
+  // Slicks carry a coloured stripe on each sidewall, like racing tyres.
+  if (slick) for (const s of [-1, 1]) parts.push(P(new THREE.TorusGeometry(r * 0.78, 0.022, 4, 20), slick, { x: s * (w / 2 + 0.005), ry: HALF_PI }));
+  return new THREE.Mesh(merge(parts), MAT_SHINY);
+}
+
+// Headlight pool on the road ahead, shown at night. Additive so overlapping beams brighten.
+let beamMat = null;
+const BEAM_GEO = new THREE.PlaneGeometry(4, 10);
+function beamMesh() {
+  if (!beamMat) {
+    const c = document.createElement('canvas');
+    c.width = 64; c.height = 128;
+    const g = c.getContext('2d');
+    const grad = g.createRadialGradient(32, 120, 4, 32, 90, 70);
+    grad.addColorStop(0, 'rgba(255,240,170,0.9)');
+    grad.addColorStop(1, 'rgba(255,240,170,0)');
+    g.fillStyle = grad;
+    g.fillRect(0, 0, 64, 128);
+    beamMat = new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(c), transparent: true, opacity: 0.55, depthWrite: false, blending: THREE.AdditiveBlending });
+  }
+  const m = new THREE.Mesh(BEAM_GEO, beamMat);
+  m.rotation.x = -HALF_PI;
+  m.position.set(0, 0.07, -5.6);
+  m.visible = false;
+  return m;
 }
 
 let shadowMat = null;
@@ -372,7 +409,7 @@ function shadowMesh() {
 // look: { bike, color, helmet, jersey, pet, noodle }
 // Where each bike's silencer ends, for exhaust smoke.
 const EXHAUST = {
-  classic: [[0.2, 0.67, 0.88]], superbike: [[0.2, 0.47, 0.66]], hyper: [[0.22, 0.5, 0.95], [-0.22, 0.5, 0.95]],
+  classic: [[0, 0.62, 1.16]], superbike: [[0.2, 0.47, 0.66]], hyper: [[0.22, 0.5, 0.95], [-0.22, 0.5, 0.95]],
   gp: [[0.18, 0.82, 1.02]], motocross: [[0.22, 1.06, 0.84]], scooter: [[0.15, 0.28, 0.65]],
   chopper: [[0.24, 0.35, 0.92]], banana: [[0.15, 0.3, 0.7]],
 };
@@ -385,7 +422,7 @@ export function buildBike(look) {
   root.add(lean);
   const body = mesh([...b.body(look.color), ...riderParts(b, look.jersey ?? look.color, look.helmet), ...petParts(look.pet, look.color)], MAT_SHINY);
   lean.add(body);
-  const wheels = [wheelMesh(b.wheelR), wheelMesh(b.wheelR)];
+  const wheels = [wheelMesh(b.wheelR, b.slick), wheelMesh(b.wheelR, b.slick)];
   wheels[0].position.set(0, b.wheelR, b.wf);
   wheels[1].position.set(0, b.wheelR, b.wb);
   lean.add(...wheels);
@@ -407,10 +444,12 @@ export function buildBike(look) {
     lean.add(o);
     return o;
   });
+  const beam = beamMesh();
+  root.add(beam);
   const shadow = shadowMesh();
   root.add(shadow);
-  const dispose = () => root.traverse((o) => { if (o.isMesh && o.geometry !== SHADOW_GEO) o.geometry.dispose(); });
-  return { root, lean, body, wheels, wheelR: b.wheelR, noodle, flame, shadow, exhausts, dispose };
+  const dispose = () => root.traverse((o) => { if (o.isMesh && o.geometry !== SHADOW_GEO && o.geometry !== BEAM_GEO) o.geometry.dispose(); });
+  return { root, lean, body, wheels, wheelR: b.wheelR, noodle, flame, shadow, exhausts, beam, dispose };
 }
 
 // ---------------------------------------------------------------- scenery
@@ -545,6 +584,9 @@ export const PROPS = {
     seg([0, 5.9, 0], [-1.8, 6.2, 0], 0.18, 0x9a9ac0),
     P(box(0.7, 0.2, 0.4), WHITE, { x: -1.9, y: 6.1 }),
   ]),
+  // ---- Fans along the roadside
+  crowd: () => crowdGeo(7),
+  crowd2: () => crowdGeo(31),
   // ---- River Hills
   boat: () => merge([
     P(sph(0.9, 10, 6, 0, Math.PI * 2, HALF_PI, HALF_PI), 0xc0622f, { sx: 0.8, sz: 2.0, y: 0.25 }),
@@ -642,6 +684,30 @@ export const PROPS = {
     return merge(parts);
   },
 };
+
+// A group of cheering fans behind a barrier, some waving flags.
+function crowdGeo(seed) {
+  let a = seed;
+  const rnd = () => { a = (a * 16807) % 2147483647; return a / 2147483647; };
+  const SHIRTS = [0xff4f8b, 0x3a86ff, 0xffd23f, 0x2ecc71, 0xff8c42, 0x9b59ff, 0xffffff, 0xe63946];
+  const SKINS = [0xf5c592, 0xe0a370, 0xb87a4b, 0x8d5a34, 0xffd9b3];
+  const parts = [
+    P(box(0.08, 0.9, 12.2), WHITE, { x: -0.4, y: 0.45 }),
+    P(box(0.1, 0.18, 12.2), 0xe63946, { x: -0.4, y: 0.85 }),
+  ];
+  for (let k = 0; k < 10; k++) {
+    const z = -5.4 + k * 1.2 + (rnd() - 0.5) * 0.4, x = 0.3 + (k % 2) * 0.9, h = 0.8 + rnd() * 0.45;
+    const shirt = SHIRTS[Math.floor(rnd() * SHIRTS.length)];
+    parts.push(
+      P(cyl(0.2, 0.25, 0.95 * h, 6), shirt, { x, y: 0.47 * h, z }),
+      P(sph(0.17, 6, 5), SKINS[Math.floor(rnd() * SKINS.length)], { x, y: 1.08 * h, z }),
+      seg([x, 0.85 * h, z + 0.2], [x - 0.1, 1.45 * h, z + 0.35], 0.08, shirt),
+    );
+    if (rnd() < 0.35) parts.push(P(box(0.03, 0.35, 0.5), SHIRTS[Math.floor(rnd() * SHIRTS.length)], { x: x - 0.1, y: 1.55 * h, z: z + 0.6 }));
+    if (rnd() < 0.3) parts.push(P(sph(0.18, 6, 3, 0, Math.PI * 2, 0, HALF_PI), SHIRTS[Math.floor(rnd() * SHIRTS.length)], { x, y: 1.14 * h, z }));
+  }
+  return merge(parts);
+}
 
 // ---------------------------------------------------------------- hazards
 // Each returns { parts, hw, hl, h, color }: half width / half length / height in metres.

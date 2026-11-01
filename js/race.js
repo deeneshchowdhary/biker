@@ -76,7 +76,11 @@ export class Race {
       this.rivals.push(r);
     }
     this.racers = [this.player, ...this.rivals];
-    for (const r of this.racers) { stage.scene.add(r.root); r.updateModel(this.track, 0); }
+    for (const r of this.racers) {
+      r.bike.beam.visible = !!world.night;
+      stage.scene.add(r.root);
+      r.updateModel(this.track, 0);
+    }
 
     this.state = 'countdown';
     this.countT = 3.999;
@@ -136,6 +140,7 @@ export class Race {
     this.obs.update(dt, this.clock, P.d);
     for (const r of this.racers) r.updateModel(this.track, dt);
     this.exhaustSmoke(dt);
+    audio.crowd(this.track.animateCrowds(this.clock, P.d));
     this.passBys();
     this.stage.confetti.update(dt);
     this.stage.smoke.update(dt);
@@ -153,7 +158,7 @@ export class Race {
     const P = this.player;
     for (const r of this.racers) {
       if (Math.abs(r.d - P.d) > 45 || !r.bike.exhausts.length) continue;
-      const rate = Math.max(0, r.speed / this.cfg.maxSpeed - 0.6) * 90 + (r.boostT > 0 ? 45 : 0);
+      const rate = Math.max(0, r.speed / this.cfg.maxSpeed - 0.6) * 60 + (r.boostT > 0 ? 35 : 0);
       r.smokeAcc = (r.smokeAcc || 0) + rate * dt;
       if (r.smokeAcc < 1) continue;
       r.root.updateMatrixWorld(true);

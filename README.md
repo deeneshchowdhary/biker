@@ -22,7 +22,7 @@ Then open http://localhost:8000.
 
 ## Worlds
 
-Farm Country 🚜 · Candy Canyon 🍭 · Dino Valley 🦕 (stomping dino feet) · Snowy Peaks ⛄ (icy patches, sliding penguins) · Neon City 🌃 (extra ramps) · River Hills 🏞️ (hillside road beside a river, logs and ducks) · Sunset Circuit 🏟️ (a sunset racetrack inspired by the great 24-hour races, with grandstands, pit garages and tyre walls)
+Farm Country 🚜 · Candy Canyon 🍭 · Dino Valley 🦕 (stomping dino feet) · Snowy Peaks ⛄ (icy patches, sliding penguins) · Neon City 🌃 (extra ramps) · River Hills 🏞️ (hillside road beside a river, logs and ducks) · Sunset Circuit 🏟️ (a sunset racetrack inspired by the great 24-hour races, with grandstands, pit garages and tyre walls) · Midnight Circuit 🌙 (the night stint: floodlights, glowing billboards, headlight beams and long straights)
 
 Each world has its own scenery, hazards, puddles (mud, chocolate, swamp, ice, neon slick), colours and music. Every world also hides one sticker star on the road.
 

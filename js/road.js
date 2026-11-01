@@ -2,8 +2,8 @@
 // Positions are described as distance along the road (d) and sideways offset.
 // Geometry is split into chunks so the GPU skips chunks that are off screen.
 import * as THREE from 'three';
-import { MAT, PROPS, checkerTexture } from './models.js';
-import { ROAD_W as W, mulberry32 } from './util.js';
+import { MAT, MAT_GLOW, PROPS, checkerTexture } from './models.js';
+import { ROAD_W as W, mulberry32, lowerBound } from './util.js';
 
 export const SEG = 6;
 const BACK = 60; // road that exists behind the start line
@@ -46,7 +46,7 @@ export class Track {
     let heading = 0;
     while (i < n) {
       let len = Math.floor((60 + rng() * 220) / SEG);
-      if (rng() < 0.3) { i += len; continue; }
+      if (rng() < (this.world.straights ?? 0.3)) { i += len * (this.world.straightLen ?? 1); continue; }
       const amt = maxCurve * (0.45 + rng() * 0.55);
       let sign = rng() < 0.5 ? -1 : 1;
       if (heading > 0.3) sign = -1; else if (heading < -0.3) sign = 1;
@@ -176,6 +176,8 @@ export class Track {
     const end = this.length + 450;
     const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), pos = new THREE.Vector3(), sc = new THREE.Vector3();
     const up = new THREE.Vector3(0, 1, 0), col = new THREE.Color();
+    this.crowds = [];
+    this.crowdDs = [];
     for (const def of defs) {
       const items = [];
       if (def.center) {
@@ -204,7 +206,8 @@ export class Track {
         chunks.get(k).push(it);
       }
       for (const list of chunks.values()) {
-        const im = new THREE.InstancedMesh(def.geo, MAT, list.length);
+        const im = new THREE.InstancedMesh(def.geo, def.glow ? MAT_GLOW : MAT, list.length);
+        const crowd = def.m.startsWith('crowd') ? { im, base: [], d: list.map((it) => it.d) } : null;
         list.forEach((it, i) => {
           const h = this.pointAt(it.d, it.off * it.side, pos);
           if (it.onRiver) pos.y += this.riverY;
@@ -215,12 +218,37 @@ export class Track {
           const sy = def.sy ? def.sy[0] + rng() * (def.sy[1] - def.sy[0]) : 1;
           sc.set(s, s * sy, s);
           im.setMatrixAt(i, m4.compose(pos, q, sc));
+          if (crowd) { crowd.base.push(m4.clone()); this.crowdDs.push({ d: it.d }); }
           if (def.tint) im.setColorAt(i, col.set(def.tint[Math.floor(rng() * def.tint.length)]));
         });
         im.computeBoundingSphere();
         this.group.add(im);
+        if (crowd) this.crowds.push(crowd);
       }
     }
+  }
+
+  // Fans near the player jump and cheer. Returns how close the nearest crowd is (0..1) for crowd noise.
+  animateCrowds(time, viewD) {
+    const m = this._m || (this._m = new THREE.Matrix4());
+    for (const c of this.crowds) {
+      let any = false;
+      for (let i = 0; i < c.base.length; i++) {
+        const rel = c.d[i] - viewD;
+        if (rel < -20 || rel > 160) continue;
+        any = true;
+        m.copy(c.base[i]);
+        m.elements[13] += Math.abs(Math.sin(time * 7 + c.d[i])) * 0.25;
+        c.im.setMatrixAt(i, m);
+      }
+      if (any) c.im.instanceMatrix.needsUpdate = true;
+    }
+    if (!this.crowdDs.length) return 0;
+    if (!this.crowdSorted) { this.crowdDs.sort((a, b) => a.d - b.d); this.crowdSorted = true; }
+    const k = lowerBound(this.crowdDs, viewD);
+    let near = 1e9;
+    for (const j of [k - 1, k]) if (this.crowdDs[j]) near = Math.min(near, Math.abs(this.crowdDs[j].d - viewD));
+    return Math.max(0, 1 - near / 70);
   }
 
   // Start line and the chequered finish banner.
